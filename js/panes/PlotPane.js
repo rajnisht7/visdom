@@ -31,10 +31,17 @@ var PlotPane = (props) => {
   const updateSmoothSlider = (value) => {
     setSmoothValue(value);
   };
-  const handleDownload = () => {
-    Plotly.downloadImage(plotlyRef.current, {
-      format: 'svg',
-      filename: contentID,
+  const handleDownload = (format = 'svg') => {
+    const plotDiv = document.getElementById(contentID);
+
+    if (!plotDiv) {
+      console.warn("Plot not ready for download");
+      return;
+    }
+
+    Plotly.downloadImage(plotDiv, {
+      format: format,
+      filename: `${contentID}`,
     });
   };
 
@@ -179,11 +186,32 @@ var PlotPane = (props) => {
     }
   }
 
+  const handleFormatDownload = (e) => {
+    const format = e.target.value;
+    if (!format) return;
+    handleDownload(format);
+    e.target.value = "";
+    };
+
+    const download_widget = (
+      <select
+        key="download_widget"
+        className="pull-right"
+        onChange={handleFormatDownload}
+        defaultValue=""
+      >
+        <option value="" disabled hidden>⬇ Download</option>
+        <option value="png">PNG</option>
+        <option value="jpeg">JPG</option>
+        <option value="svg">SVG</option>
+      </select>
+  );
+
   return (
     <Pane
       {...props}
       handleDownload={handleDownload}
-      barwidgets={[smooth_widget_button]}
+      barwidgets={[smooth_widget_button,download_widget]}
       widgets={[smooth_widget]}
       enablePropertyList
     >

@@ -26,6 +26,57 @@ from visdom.server.defaults import (
 from visdom.server.build import download_scripts
 from visdom.utils.server_utils import hash_password, set_cookie
 
+def valid_port(value):
+    """validate if port if valid or not that is in range(1-65535)."""
+    try:
+        port = int(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError(
+            "Port must be an integer, got: '{}'".format(value)
+        )
+    if not (1 <= port <= 65535):
+        raise argparse.ArgumentTypeError(
+            "Port must be between 1 and 65535, got: {}".format(port)
+        )
+    return port
+
+MAX_PORT_RETRIES = 10
+
+def port_try_listen(app, port, bind_local, retries=MAX_PORT_RETRIES):
+    original_port = port
+    for attempt in range(retries):
+        try:
+            if bind_local:
+                app.listen(
+                    port,
+                    max_buffer_size=1024**3,
+                    address="127.0.0.1"
+                )
+            else:
+                app.listen(port, max_buffer_size=1024**3)
+            if port != original_port:
+                print(
+                    "Port {} was in use. "
+                    "Server started on port {} instead.".format(
+                        original_port, port
+                    )
+                )
+            return port  
+        except OSError:
+            print(
+                "Port {} is already in use, "
+                "trying port {}...".format(port, port + 1)
+            )
+            port += 1
+
+    #all tries exhausted
+    raise OSError(
+        "Could not find a free port after {} attempts "
+        "(tried ports {}-{}).".format(
+            retries, original_port, original_port + retries - 1
+        )
+    )
+
 
 def start_server(
     port=DEFAULT_PORT,
@@ -49,11 +100,14 @@ def start_server(
         use_frontend_client_polling=use_frontend_client_polling,
         eager_data_loading=eager_data_loading,
     )
-    if bind_local:
-        app.listen(port, max_buffer_size=1024**3, address="127.0.0.1")
-    else:
-        app.listen(port, max_buffer_size=1024**3)
-    logging.info("Application Started")
+    try:
+        port = port_try_listen(app, port, bind_local)
+    except OSError as e:
+        logging.error(str(e))
+        logging.error(
+            "Please specify a different port using the -port flag."
+        )
+        sys.exit(1)
     logging.info(f"Working directory: {os.path.abspath(env_path)}")
 
     if "HOSTNAME" in os.environ and hostname == DEFAULT_HOSTNAME:
@@ -69,6 +123,7 @@ def start_server(
     app.sources = []
 
 
+
 def main(print_func=None):
     """
     Run a server from the command line, first parsing arguments from the
@@ -78,7 +133,7 @@ def main(print_func=None):
     parser.add_argument(
         "-port",
         metavar="port",
-        type=int,
+        type=valid_port,
         default=DEFAULT_PORT,
         help="port to run the server on.",
     )
@@ -147,10 +202,10 @@ def main(print_func=None):
 
     # Process base_url
     base_url = FLAGS.base_url if FLAGS.base_url != DEFAULT_BASE_URL else ""
-    assert base_url == "" or base_url.startswith("/"), "base_url should start with /"
-    assert base_url == "" or not base_url.endswith(
-        "/"
-    ), "base_url should not end with / as it is appended automatically"
+    if base_url and not base_url.startswith("/"):
+        parser.error("base_url must start with '/'")
+    if base_url and base_url.endswith("/"):
+        parser.error("base_url should not end with '/' (it is appended automatically)")
 
     try:
         logging_level = int(FLAGS.logging_level)

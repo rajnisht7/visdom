@@ -39,7 +39,7 @@ def valid_port(value):
         )
     if not (0 <= port <= 65535):
         raise argparse.ArgumentTypeError(
-            f"Port must be between 1 and {65535}, got: {port}"
+            f"Port must be between 1 and 65535, got: {port}"
         )
     return port
 

@@ -59,7 +59,7 @@ def port_try_listen(app, port, bind_local, retries=MAX_PORT_RETRIES):
             if port != original_port:
                 logging.info(
                     f"Port {original_port} was in use. "
-                    "Server started on port {port} instead."
+                    f"Server started on port {port} instead."
                 )
             return port  
         except OSError:

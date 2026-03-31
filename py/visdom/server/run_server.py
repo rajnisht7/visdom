@@ -27,7 +27,7 @@ from visdom.server.build import download_scripts
 from visdom.utils.server_utils import hash_password, set_cookie
 
 def valid_port(value):
-    """validate if port if valid or not that is in range(1-65535)."""
+    """Validate that the port is an integer in the range [1, 65535]."""
     try:
         port = int(value)
     except ValueError:

@@ -164,9 +164,9 @@ def main(print_func=None):
     # Process base_url
     base_url = FLAGS.base_url if FLAGS.base_url != DEFAULT_BASE_URL else ""
     if base_url and not base_url.startswith("/"):
-            parser.error("base_url must start with '/'")
+        parser.error("base_url must start with '/'")
     if base_url and base_url.endswith("/"):
-            parser.error("base_url should not end with '/' (it is appended automatically)")    
+        parser.error("base_url should not end with '/' (it is appended automatically)")    
 
     try:
         logging_level = int(FLAGS.logging_level)

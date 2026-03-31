@@ -26,8 +26,6 @@ from visdom.server.defaults import (
 from visdom.server.build import download_scripts
 from visdom.utils.server_utils import hash_password, set_cookie
 
-MAX_PORT = 65535
-
 def valid_port(value):
     """Validate that the port is an integer in the range [1, 65535]."""
     try:
@@ -36,9 +34,9 @@ def valid_port(value):
         raise argparse.ArgumentTypeError(
             f"Port must be an integer, got: '{value}'"
         )
-    if not (1 <= port <= MAX_PORT):
+    if not (1 <= port <= 65535):
         raise argparse.ArgumentTypeError(
-            f"Port must be between 1 and {MAX_PORT}, got: {port}"
+            f"Port must be between 1 and {65535}, got: {port}"
         )
     return port
 

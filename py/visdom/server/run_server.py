@@ -34,7 +34,7 @@ def valid_port(value):
         raise argparse.ArgumentTypeError(
             f"Port must be an integer, got: '{value}'"
         )
-    if not (1 <= port <= 65535):
+    if not (0 <= port <= 65535):
         raise argparse.ArgumentTypeError(
             f"Port must be between 1 and {65535}, got: {port}"
         )

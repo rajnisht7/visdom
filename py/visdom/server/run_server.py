@@ -45,6 +45,8 @@ MAX_PORT_RETRIES = 10
 def port_try_listen(app, port, bind_local, retries=MAX_PORT_RETRIES):
     original_port = port
     for attempt in range(retries):
+        if port > 65535:
+            break
         try:
             if bind_local:
                 app.listen(
@@ -55,17 +57,14 @@ def port_try_listen(app, port, bind_local, retries=MAX_PORT_RETRIES):
             else:
                 app.listen(port, max_buffer_size=1024**3)
             if port != original_port:
-                print(
-                    "Port {} was in use. "
-                    "Server started on port {} instead.".format(
-                        original_port, port
-                    )
+                logging.info(
+                    f"Port {original_port} was in use. "
+                    "Server started on port {port} instead."
                 )
             return port  
         except OSError:
-            print(
-                "Port {} is already in use, "
-                "trying port {}...".format(port, port + 1)
+            logging.warning(
+                f"Port {port} is already in use, trying port {port + 1}"
             )
             port += 1
 

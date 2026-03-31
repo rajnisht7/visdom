@@ -26,6 +26,9 @@ from visdom.server.defaults import (
 from visdom.server.build import download_scripts
 from visdom.utils.server_utils import hash_password, set_cookie
 
+MAX_PORT_RETRIES = 10
+MAX_PORT = 65535
+
 def valid_port(value):
     """Validate that the port is an integer in the range [1, 65535]."""
     try:
@@ -34,18 +37,16 @@ def valid_port(value):
         raise argparse.ArgumentTypeError(
             "Port must be an integer, got: '{}'".format(value)
         )
-    if not (1 <= port <= 65535):
+    if not (1 <= port <= MAX_PORT):
         raise argparse.ArgumentTypeError(
             "Port must be between 1 and 65535, got: {}".format(port)
         )
     return port
 
-MAX_PORT_RETRIES = 10
-
 def port_try_listen(app, port, bind_local, retries=MAX_PORT_RETRIES):
     original_port = port
     for attempt in range(retries):
-        if port > 65535:
+        if port > MAX_PORT:
             break
         try:
             if bind_local:

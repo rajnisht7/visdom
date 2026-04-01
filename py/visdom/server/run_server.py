@@ -59,10 +59,7 @@ def start_server(
     eager_data_loading=False,
 ):
     # validate port even when called programmatically
-    if not (0 <= port <= MAX_PORT):
-        raise ValueError(
-            f"Invalid port {port}. Port must be between 0 and {MAX_PORT}."
-        )
+    port = valid_port(port)
     
     print("It's Alive!")
     app = Application(
@@ -172,6 +169,7 @@ def main(print_func=None):
 
     # Process base_url
     base_url = FLAGS.base_url if FLAGS.base_url != DEFAULT_BASE_URL else ""
+    # parser.error provides clean CLI feedback and exits immediately
     if base_url and not base_url.startswith("/"):
         parser.error(f"base_url must start with '/', got: '{base_url}'")
     if base_url and base_url.endswith("/"):

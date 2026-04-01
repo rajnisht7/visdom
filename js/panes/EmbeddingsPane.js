@@ -82,7 +82,7 @@ class EmbeddingsPane extends React.Component {
         pane_data: false, // No need to send the full data for this
       },
       this.props.id,
-      this.props.env
+      this.props.envID
     );
   };
 

@@ -26,6 +26,8 @@ from visdom.server.defaults import (
 from visdom.server.build import download_scripts
 from visdom.utils.server_utils import hash_password, set_cookie
 
+MAX_PORT = 65535
+
 def valid_port(value):
     """
     Validate that the port is an integer in the range [0, 65535].
@@ -37,9 +39,9 @@ def valid_port(value):
         raise argparse.ArgumentTypeError(
             f"Port must be an integer, got: '{value}'"
         )
-    if not (0 <= port <= 65535):
+    if not (0 <= port <= MAX_PORT):
         raise argparse.ArgumentTypeError(
-            f"Port must be between 0 and 65535, got: {port}"
+            f"Port must be between 0 and {MAX_PORT}, got: {port}"
         )
     return port
 
@@ -56,6 +58,12 @@ def start_server(
     bind_local=False,
     eager_data_loading=False,
 ):
+    # validate port even when called programmatically
+    if not (0 <= port <= MAX_PORT):
+        raise ValueError(
+            f"Invalid port {port}. Port must be between 0 and {MAX_PORT}."
+        )
+    
     print("It's Alive!")
     app = Application(
         port=port,
@@ -165,9 +173,9 @@ def main(print_func=None):
     # Process base_url
     base_url = FLAGS.base_url if FLAGS.base_url != DEFAULT_BASE_URL else ""
     if base_url and not base_url.startswith("/"):
-        parser.error("base_url must start with '/'")
+        parser.error(f"base_url must start with '/', got: '{base_url}'")
     if base_url and base_url.endswith("/"):
-        parser.error("base_url should not end with '/' (it is appended automatically)")    
+        parser.error(f"base_url should not end with '/', got: '{base_url}'")  
 
     try:
         logging_level = int(FLAGS.logging_level)

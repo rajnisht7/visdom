@@ -59,7 +59,11 @@ def start_server(
     eager_data_loading=False,
 ):
     # validate port even when called programmatically
-    port = valid_port(port)
+    try:
+        port = valid_port(port)
+    except argparse.ArgumentTypeError as e:
+        #convert to generic exception for programmatic callers
+        raise ValueError(str(e)) from e
     
     print("It's Alive!")
     app = Application(

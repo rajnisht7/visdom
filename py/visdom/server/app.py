@@ -37,6 +37,7 @@ from visdom.server.handlers.web_handlers import (
     ErrorHandler,
     ExistsHandler,
     ForkEnvHandler,
+    HealthHandler,
     IndexHandler,
     PostHandler,
     SaveHandler,
@@ -112,6 +113,7 @@ class Application(tornado.web.Application):
             (r"%s/env_state" % self.base_url, EnvStateHandler, {"app": self}),
             (r"%s/fork_env" % self.base_url, ForkEnvHandler, {"app": self}),
             (r"%s/user/(.*)" % self.base_url, UserSettingsHandler, {"app": self}),
+            (r"%s/health" % self.base_url, HealthHandler, {"app": self}),
             (r"%s(.*)" % self.base_url, IndexHandler, {"app": self}),
         ]
         super(Application, self).__init__(handlers, **tornado_settings)

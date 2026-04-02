@@ -681,3 +681,11 @@ class ErrorHandler(BaseHandler):
     def get(self, text):
         error_text = text or "test error"
         raise Exception(error_text)
+
+class HealthHandler(BaseHandler):
+    def initialize(self, app):
+        self.app = app
+
+    def get(self):
+        self.set_header("Content-Type", "application/json")
+        self.write({"status": "ok"})

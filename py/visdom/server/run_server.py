@@ -173,11 +173,10 @@ def main(print_func=None):
 
     # Process base_url
     base_url = FLAGS.base_url if FLAGS.base_url != DEFAULT_BASE_URL else ""
-    # parser.error provides clean CLI feedback and exits immediately
-    if base_url and not base_url.startswith("/"):
-        parser.error(f"base_url must start with '/', got: '{base_url}'")
-    if base_url and base_url.endswith("/"):
-        parser.error(f"base_url should not end with '/', got: '{base_url}'")  
+    assert base_url == "" or base_url.startswith("/"), "base_url should start with /"
+    assert base_url == "" or not base_url.endswith(
+        "/"
+    ), "base_url should not end with / as it is appended automatically"
 
     try:
         logging_level = int(FLAGS.logging_level)

@@ -14,7 +14,8 @@ var classNames = require('classnames');
 
 var Pane = forwardRef((props, ref) => {
   const { id, title, content, children, widgets, enablePropertyList } = props;
-  var { barwidgets = [] } = props;
+  var { barwidgets } = props;
+  barwidgets = barwidgets || []; 
 
   // state varibles
   // --------------

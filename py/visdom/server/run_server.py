@@ -33,14 +33,19 @@ def valid_port(value):
     Validate that the port is an integer in the range [1, 65535].
     Note: Port 0 is excluded for http/browser, as browser blocks it(ERR_UNSAFE_PORT).
     """
+    if isinstance(value, (bool, float)):
+        raise ValueError(
+            f"Port must be an integer, got : '{value}'"
+        )
+        
     try:
         port = int(value)
-    except ValueError:
-        raise argparse.ArgumentTypeError(
+    except (TypeError, ValueError):
+        raise ValueError(
             f"Port must be an integer, got: '{value}'"
         )
     if not (1 <= port <= MAX_PORT):
-        raise argparse.ArgumentTypeError(
+        raise ValueError(
             f"Port must be between 1 and {MAX_PORT}, got: {port}"
         )
     return port
@@ -59,11 +64,7 @@ def start_server(
     eager_data_loading=False,
 ):
     # validate port even when called programmatically
-    try:
-        port = valid_port(port)
-    except argparse.ArgumentTypeError as e:
-        # convert to generic exception for programmatic callers
-        raise ValueError(str(e)) from e
+    port = valid_port(port)
     
     print("It's Alive!")
     app = Application(

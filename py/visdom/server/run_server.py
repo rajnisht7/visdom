@@ -37,14 +37,14 @@ def valid_port(value):
     """
     if isinstance(value, (bool, float)):
         raise ValueError(
-            f"Port must be an integer, got : '{value}'"
+            f"Port must be an integer, got: '{value}'"
         )
         
     try:
         port = int(value)
     except (TypeError, ValueError):
         raise ValueError(
-            f"Port must be an integer,got: '{value}'"
+            f"Port must be an integer, got: '{value}'"
         )
     if not (1 <= port <= MAX_PORT):
         raise ValueError(

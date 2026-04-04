@@ -31,7 +31,7 @@ MAX_PORT = 65535
 def valid_port(value):
     """
     Validate that the port is an integer in the range [1, 65535].
-    Note: Port 0 is excluded, as browser blocks it(ERR_UNSAFE_PORT).
+    Note: Port 0 is excluded for http/browser, as browser blocks it(ERR_UNSAFE_PORT).
     """
     try:
         port = int(value)

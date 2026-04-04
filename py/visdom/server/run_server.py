@@ -30,8 +30,8 @@ MAX_PORT = 65535
 
 def valid_port(value):
     """
-    Validate that the port is an integer in the range [0, 65535].
-    Note: Port 0 is allowed (requests an ephemeral port from the OS).
+    Validate that the port is an integer in the range [1, 65535].
+    Note: Port 0 is excluded, as browser blocks it(ERR_UNSAFE_PORT).
     """
     try:
         port = int(value)
@@ -39,7 +39,7 @@ def valid_port(value):
         raise argparse.ArgumentTypeError(
             f"Port must be an integer, got: '{value}'"
         )
-    if not (0 <= port <= MAX_PORT):
+    if not (1 <= port <= MAX_PORT):
         raise argparse.ArgumentTypeError(
             f"Port must be between 0 and {MAX_PORT}, got: {port}"
         )

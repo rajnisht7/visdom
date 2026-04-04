@@ -33,6 +33,10 @@ def valid_port(value):
     Validate that the port is an integer in the range [0, 65535].
     Note: Port 0 is allowed (requests an ephemeral port from the OS).
     """
+    if isinstance(value, float):
+        raise argparse.ArgumentTypeError(
+            f"Port must be an integer, got float: '{value}'"
+        )
     try:
         port = int(value)
     except (TypeError, ValueError):

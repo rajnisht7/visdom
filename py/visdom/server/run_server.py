@@ -35,7 +35,7 @@ def valid_port(value):
     """
     try:
         port = int(value)
-    except ValueError:
+    except (TypeError, ValueError):
         raise argparse.ArgumentTypeError(
             f"Port must be an integer, got: '{value}'"
         )

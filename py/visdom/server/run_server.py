@@ -41,7 +41,7 @@ def valid_port(value):
         )
     if not (1 <= port <= MAX_PORT):
         raise argparse.ArgumentTypeError(
-            f"Port must be between 0 and {MAX_PORT}, got: {port}"
+            f"Port must be between 1 and {MAX_PORT}, got: {port}"
         )
     return port
 

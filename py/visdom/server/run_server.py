@@ -35,7 +35,7 @@ def valid_port(value):
     """
     if isinstance(value, (bool, float)):
         raise argparse.ArgumentTypeError(
-            f"Port must be an integer, got float: '{value}'"
+            f"Port must be an integer, got : '{value}'"
         )
     try:
         port = int(value)
@@ -66,7 +66,7 @@ def start_server(
     try:
         port = valid_port(port)
     except argparse.ArgumentTypeError as e:
-        #convert to generic exception for programmatic callers
+        # convert to generic exception for programmatic callers
         raise ValueError(str(e)) from e
     
     print("It's Alive!")

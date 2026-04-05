@@ -1,11 +1,7 @@
 name: Deploy to PyPI
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-        - 'py/visdom/VERSION'
+  workflow_dispatch:
 
 jobs:
   deploy:

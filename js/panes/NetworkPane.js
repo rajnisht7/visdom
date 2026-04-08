@@ -33,7 +33,7 @@ function NetworkPane(props) {
 
     if (!svg) {
       console.warn('NetworkPane: SVG not found for export');
-      alert('Graph is not ready yet. Please try again in a moment.');
+      console.info('Graph is not ready yet. Please try again.');
       return;
     }
 

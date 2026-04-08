@@ -27,10 +27,15 @@ function NetworkPane(props) {
   // private events
   // --------------
   const handleDownload = () => {
-    saveSvgAsPng(document.getElementsByTagName('svg')[0], 'plot.png', {
-      scale: 2,
-      backgroundColor: '#FFFFFF',
-    });
+    const svg = document.querySelector('.Network_Div svg');
+    if (!svg) return;
+
+    setTimeout(() => {
+      saveSvgAsPng(svg, 'plot.png', {
+        scale: 2,
+        backgroundColor: '#FFFFFF',
+      });
+    }, 150);
   };
 
   // effects

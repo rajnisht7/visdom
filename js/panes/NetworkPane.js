@@ -29,7 +29,7 @@ function NetworkPane(props) {
   // private events
   // --------------
   const handleDownload = () => {
-    const svg = containerRef.current?.querySelector('svg');
+    const svg = containerRef.current?.querySelector('.visdom-network-svg');
 
     if (!svg) {
       console.warn('NetworkPane: graph is not ready yet; SVG not found for export. Please try again.');
@@ -65,6 +65,7 @@ function NetworkPane(props) {
       .attr('viewBox', '0 0 ' + width + ' ' + height)
       .attr('preserveAspectRatio', 'xMinYMin meet')
       .classed('.svg-content', true);
+      .classed('visdom-network-svg', true);
     if (svg.empty()) {
       svg = d3
         .select('.Network_Div')

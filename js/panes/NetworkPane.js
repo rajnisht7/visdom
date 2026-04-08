@@ -10,7 +10,7 @@
 // ignoring errors due to statically loaded d3 and saveSvgAsPng
 /* eslint-disable no-undef */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 import Pane from './Pane';
 
@@ -24,18 +24,22 @@ function NetworkPane(props) {
     _height,
   } = props;
 
+  const containerRef = useRef(null);
+
   // private events
   // --------------
   const handleDownload = () => {
-    const svg = document.querySelector('.Network_Div svg');
-    if (!svg) return;
+    const svg = containerRef.current?.querySelector('svg');
 
-    setTimeout(() => {
-      saveSvgAsPng(svg, 'plot.png', {
-        scale: 2,
-        backgroundColor: '#FFFFFF',
-      });
-    }, 150);
+    if (!svg) {
+      console.warn('NetworkPane: SVG not found for export');
+      return;
+    }
+
+    saveSvgAsPng(svg, 'plot.png', {
+      scale: 2,
+      backgroundColor: '#FFFFFF',
+    });
   };
 
   // effects
@@ -90,6 +94,10 @@ function NetworkPane(props) {
     }
 
     force.nodes(graph.nodes).links(graph.edges).start();
+    
+    force.on('end', () => {
+      // graph layout stabilized
+    });
 
     var link = svg
       .selectAll('.link')
@@ -217,6 +225,7 @@ function NetworkPane(props) {
   return (
     <Pane {...props} handleDownload={handleDownload}>
       <div
+        ref={containerRef}
         id="Network_Div"
         style={{ height: '100%', width: '100%', flex: 1 }}
         className="Network_Div"

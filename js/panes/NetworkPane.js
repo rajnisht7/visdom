@@ -32,8 +32,7 @@ function NetworkPane(props) {
     const svg = containerRef.current?.querySelector('svg');
 
     if (!svg) {
-      console.warn('NetworkPane: SVG not found for export');
-      console.info('Graph is not ready yet. Please try again.');
+      console.warn('NetworkPane: graph is not ready yet; SVG not found for export. Please try again.');
       return;
     }
 

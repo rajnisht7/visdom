@@ -33,6 +33,7 @@ function NetworkPane(props) {
 
     if (!svg) {
       console.warn('NetworkPane: SVG not found for export');
+      alert('Graph is not ready yet. Please try again in a moment.');
       return;
     }
 
@@ -94,11 +95,6 @@ function NetworkPane(props) {
     }
 
     force.nodes(graph.nodes).links(graph.edges).start();
-    
-    force.on('end', () => {
-  // graph layout stabilized
-  // Note: no existing 'end' listener is defined, so this does not override any prior behavior
-  });
 
     var link = svg
       .selectAll('.link')

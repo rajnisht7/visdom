@@ -64,7 +64,7 @@ function NetworkPane(props) {
       .select('svg')
       .attr('viewBox', '0 0 ' + width + ' ' + height)
       .attr('preserveAspectRatio', 'xMinYMin meet')
-      .classed('.svg-content', true);
+      .classed('svg-content', true);
     if (svg.empty()) {
       svg = d3
         .select('.Network_Div')

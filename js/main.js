@@ -556,8 +556,7 @@ const App = () => {
     storeData.layout = layout;
   };
   const resizePaneLive = (layout) => {
-    setStoreData((prev) => ({ ...prev, layout }));
-    storeData.layout = layout;
+    updateLayout(layout);
   };
   useEffect(() => {
     clearTimeout(localStorageTimer.current);

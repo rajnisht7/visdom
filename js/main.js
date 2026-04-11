@@ -570,11 +570,6 @@ const App = () => {
       clearTimeout(localStorageTimer.current);
     };
   }, [storeData]);
-  useEffect(() => {
-    storeData.layout.map((playout) => {
-      localStorage.setItem(keyLS(playout.i), JSON.stringify(playout));
-    });
-  }, [storeData]);
 
   const updateToLayout = (newLayoutID) => {
     setSelection((prev) => ({

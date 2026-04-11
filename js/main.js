@@ -903,6 +903,7 @@ const App = () => {
           draggableHandle={'.bar'}
           onWidthChange={onWidthChange}
           onResizeStop={resizePane}
+          onResize={resizePaneLive}
           onDragStop={movePane}
         >
           {panes}

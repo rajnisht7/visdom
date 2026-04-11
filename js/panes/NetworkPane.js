@@ -86,7 +86,8 @@ function NetworkPane(props) {
         .select(containerRef.current)
         .append('svg')
         .attr('viewBox', '0 0 ' + width + ' ' + height)
-        .attr('preserveAspectRatio', 'xMinYMin meet');
+        .attr('preserveAspectRatio', 'xMinYMin meet')
+        .classed('svg-content', true);
     }
 
     if (directed) {

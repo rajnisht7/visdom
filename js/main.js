@@ -569,7 +569,7 @@ const App = () => {
     return () => {
       clearTimeout(localStorageTimer.current);
     };
-  }, [storeData.layout, selection.envIDs]);
+  }, [storeData.layout, selection.envIDs[0]]);
 
   const updateToLayout = (newLayoutID) => {
     setSelection((prev) => ({

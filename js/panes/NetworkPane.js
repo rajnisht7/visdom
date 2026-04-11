@@ -44,9 +44,11 @@ function NetworkPane(props) {
       return;
     }
 
-    saveSvgAsPng(svg, 'plot.png', {
-      scale: 2,
-      backgroundColor: '#FFFFFF',
+    requestAnimationFrame(() => {
+      saveSvgAsPng(svg, 'plot.png', {
+        scale: 2,
+        backgroundColor: '#FFFFFF',
+      });
     });
   };
 

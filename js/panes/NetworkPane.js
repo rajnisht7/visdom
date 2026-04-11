@@ -25,6 +25,7 @@ function NetworkPane(props) {
   } = props;
 
   const containerRef = useRef(null);
+  const timeoutRef = useRef(null);
   const [downloadError, setDownloadError] = useState(null);
 
   // private events
@@ -34,7 +35,12 @@ function NetworkPane(props) {
 
     if (!svg) {
       setDownloadError('Graph is not ready yet. Please try again.');
-      setTimeout(() => setDownloadError(null), 3000);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      timeoutRef.current = setTimeout(() => {
+        setDownloadError(null);
+      }, 3000);
       return;
     }
 
@@ -51,6 +57,14 @@ function NetworkPane(props) {
   useEffect(() => {
     CreateNetwork(content);
   }, []);
+
+  useEffect(() => {
+  return () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+  };
+}, []);
 
   const CreateNetwork = (graph) => {
     var width = _width,

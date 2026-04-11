@@ -41,8 +41,9 @@ var PlotPane = (props) => {
   // events
   // ------
   useEffect(() => {
-    if (plotlyRef.current) {
-      Plotly.Plots.resize(plotlyRef.current);
+    const plotElement = plotlyRef.current;
+    if (plotElement && plotElement._fullLayout) {
+      Plotly.Plots.resize(plotElement);
     }
   }, [props.h, props.w]);
   useEffect(() => {

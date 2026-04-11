@@ -111,6 +111,7 @@ const App = () => {
   const _timeoutID = useRef(null);
   const _pendingPanes = useRef([]);
   const _pendingPanesVersions = useRef({});
+  const localStorageTimer = useRef(null);
 
   // --------------------- //
   // grid helper functions //
@@ -554,6 +555,18 @@ const App = () => {
     // for now it's important to fix relayout grossness
     storeData.layout = layout;
   };
+  const resizePaneLive = (layout) => {
+    setStoreData((prev) => ({ ...prev, layout }));
+    storeData.layout = layout;
+  };
+  useEffect(() => {
+    clearTimeout(localStorageTimer.current);
+    localStorageTimer.current = setTimeout(() => {
+      storeData.layout.map((playout) => {
+        localStorage.setItem(keyLS(playout.i), JSON.stringify(playout));
+      });
+    }, 300); 
+  }, [storeData]);
   useEffect(() => {
     storeData.layout.map((playout) => {
       localStorage.setItem(keyLS(playout.i), JSON.stringify(playout));

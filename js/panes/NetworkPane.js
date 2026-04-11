@@ -222,7 +222,6 @@ function NetworkPane(props) {
     <Pane {...props} handleDownload={handleDownload}>
       <div
         ref={containerRef}
-        id="Network_Div"
         style={{ height: '100%', width: '100%', flex: 1 }}
         className="Network_Div"
       />

@@ -59,12 +59,12 @@ function NetworkPane(props) {
   }, []);
 
   useEffect(() => {
-  return () => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-  };
-}, []);
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   const CreateNetwork = (graph) => {
     var width = _width,

@@ -555,29 +555,9 @@ const App = () => {
     // for now it's important to fix relayout grossness
     storeData.layout = layout;
   };
-  const resizeFrame = useRef(null);
-  const pendingResizeLayout = useRef(null);
   const resizePaneLive = (layout) => {
-    pendingResizeLayout.current = layout;
-    if (resizeFrame.current != null) {
-      return;
-    }
-
-    resizeFrame.current = window.requestAnimationFrame(() => {
-      resizeFrame.current = null;
-      if (pendingResizeLayout.current != null) {
-        updateLayout(pendingResizeLayout.current);
-        pendingResizeLayout.current = null;
-      }
-    });
+    updateLayout(layout);
   };
-  useEffect(() => {
-    return () => {
-      if (resizeFrame.current != null) {
-        window.cancelAnimationFrame(resizeFrame.current);
-      }
-    };
-  }, []);
   useEffect(() => {
     clearTimeout(localStorageTimer.current);
     localStorageTimer.current = setTimeout(() => {

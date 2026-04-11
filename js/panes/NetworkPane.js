@@ -10,7 +10,7 @@
 // ignoring errors due to statically loaded d3 and saveSvgAsPng
 /* eslint-disable no-undef */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import Pane from './Pane';
 
@@ -25,6 +25,7 @@ function NetworkPane(props) {
   } = props;
 
   const containerRef = useRef(null);
+  const [downloadError, setDownloadError] = useState(null);
 
   // private events
   // --------------
@@ -32,7 +33,8 @@ function NetworkPane(props) {
     const svg = containerRef.current?.querySelector('svg');
 
     if (!svg) {
-      console.warn('NetworkPane: graph is not ready yet; SVG not found for export. Please try again.');
+      setDownloadError('Graph is not ready yet. Please try again.');
+      setTimeout(() => setDownloadError(null), 3000);
       return;
     }
 

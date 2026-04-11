@@ -42,10 +42,17 @@ var PlotPane = (props) => {
   // ------
   useEffect(() => {
     const plotElement = plotlyRef.current;
-    if (plotElement && plotElement._fullLayout) {
-      Plotly.Plots.resize(plotElement);
-    }
-  }, [props.h, props.w]);
+    if (!plotElement) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      if (plotElement._fullLayout) {
+        Plotly.Plots.resize(plotElement);
+      }
+    });
+
+    resizeObserver.observe(plotElement);
+    return () => resizeObserver.disconnect();
+  }, []);
   useEffect(() => {
     if (previousContent) {
       // Retain trace visibility between old and new plots

@@ -565,7 +565,11 @@ const App = () => {
       storeData.layout.map((playout) => {
         localStorage.setItem(keyLS(playout.i), JSON.stringify(playout));
       });
-    }, 300); 
+    }, 300);
+
+    return () => {
+      clearTimeout(localStorageTimer.current);
+    };
   }, [storeData]);
   useEffect(() => {
     storeData.layout.map((playout) => {

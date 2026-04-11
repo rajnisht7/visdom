@@ -45,7 +45,6 @@ var PlotPane = (props) => {
       Plotly.Plots.resize(plotlyRef.current);
     }
   }, [props.h, props.w]);
-  
   useEffect(() => {
     if (previousContent) {
       // Retain trace visibility between old and new plots

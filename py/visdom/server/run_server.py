@@ -31,15 +31,15 @@ MAX_PORT = 65535
 def valid_port(value):
     """
     Validate that the port is an integer in the range [1, 65535].
-    Note: Port 0 is excluded for http/browser, as browser blocks it(ERR_UNSAFE_PORT).
-    it raises ValueError and argparse automatically converts this to
-    ArgumentTypeError when used as type= argument
+    Note: Port 0 is excluded for HTTP/browser use because browsers block it
+    with `ERR_UNSAFE_PORT`
+    It raises ValueError, and argparse automatically converts this to
+    ArgumentTypeError when used as a `type=` argument.
     """
     if isinstance(value, (bool, float)):
         raise ValueError(
             f"Port must be an integer, got: '{value}'"
         )
-        
     try:
         port = int(value)
     except (TypeError, ValueError):
@@ -67,7 +67,6 @@ def start_server(
 ):
     # Validate port even when called programmatically
     port = valid_port(port)
-    
     print("It's Alive!")
     app = Application(
         port=port,

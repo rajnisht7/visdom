@@ -682,6 +682,7 @@ class ErrorHandler(BaseHandler):
         error_text = text or "test error"
         raise Exception(error_text)
 
+
 class HealthHandler(BaseHandler):
     def get(self):
         self.write({"status": "ok"})

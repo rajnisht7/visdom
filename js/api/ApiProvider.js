@@ -57,7 +57,7 @@ const ApiProvider = ({ children }) => {
       if (apiHandlers.current?.onDisconnect) {
         apiHandlers.current.onDisconnect(_socket);
       }
-      _socket.current = null;
+      // _socket.current = null;
       setConnected(false);
     };
 

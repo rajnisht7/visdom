@@ -289,12 +289,6 @@ button[title="smooth lines"] {
 button[title="smooth lines"].active {
     color: red;
 }
-
-.env-select-wrapper {
-  position: relative;
-  display: inline-block;
-  vertical-align: middle;
-}
  
 .env-arrow-wrapper {
   position: absolute;

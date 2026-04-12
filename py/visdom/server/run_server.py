@@ -30,7 +30,7 @@ MAX_PORT = 65535
 
 
 class PortValidationError(ValueError, argparse.ArgumentTypeError):
-    """Validation error for port values that works for argparse and callers."""
+    """Validation error for port values that work for argparse and callers."""
 
 
 def valid_port(value):

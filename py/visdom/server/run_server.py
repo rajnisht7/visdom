@@ -33,7 +33,7 @@ def valid_port(value):
     """
     Validate that the port is an integer in the range [1, 65535].
     Note: Port 0 is excluded for HTTP/browser use because browsers block it
-    with `ERR_UNSAFE_PORT`
+    with `ERR_UNSAFE_PORT`.
     It raises ValueError, and argparse automatically converts this to
     ArgumentTypeError when used as a `type=` argument.
     """

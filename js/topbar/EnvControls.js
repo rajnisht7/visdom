@@ -74,13 +74,9 @@ function EnvControls(props) {
       onEnvSelect([slist[currentIdx + 1]]);
     }
   };
-  const isAtStart =
-    !connected || readonly || !hasSingleSelectedEnv || currentIdx <= 0;
-  const isAtEnd =
-    !connected ||
-    readonly ||
-    !hasSingleSelectedEnv ||
-    currentIdx >= slist.length - 1;
+  const isDisabled = !connected || readonly || !hasSingleSelectedEnv;
+  const isAtStart = isDisabled || currentIdx <= 0;
+  const isAtEnd = isDisabled || currentIdx >= slist.length - 1;
 
   // rendering
   // ---------

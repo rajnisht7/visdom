@@ -114,6 +114,7 @@ function EnvControls(props) {
           {slist.length > 1 && (
             <div className="env-arrow-wrapper">
               <button
+                aria-label="Previous Environment"
                 className="env-arrow-btn"
                 title="Previous Environment"
                 disabled={isAtStart}
@@ -122,6 +123,7 @@ function EnvControls(props) {
                 ▲
               </button>
               <button
+                aria-label="Next Environment"
                 className="env-arrow-btn"
                 title="Next Environment"
                 disabled={isAtEnd}

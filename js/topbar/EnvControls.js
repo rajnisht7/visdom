@@ -63,20 +63,23 @@ function EnvControls(props) {
   );
 
   const currentIdx = slist.indexOf(envIDs[0]);
+  const hasSingleSelectedEnv = envIDs.length === 1 && currentIdx !== -1;
 
   const onPrevEnv = () => {
-    if (currentIdx > 0) {
+    if (hasSingleSelectedEnv && currentIdx > 0) {
       onEnvSelect([slist[currentIdx - 1]]);
     }
   };
 
   const onNextEnv = () => {
-    if (currentIdx < slist.length - 1) {
+    if (hasSingleSelectedEnv && currentIdx < slist.length - 1) {
       onEnvSelect([slist[currentIdx + 1]]);
     }
   };
-  const isAtStart = !connected || readonly || currentIdx <= 0;
-  const isAtEnd   = !connected || readonly || currentIdx >= slist.length - 1;
+  const isAtStart =
+    !connected || readonly || !hasSingleSelectedEnv || currentIdx <= 0;
+  const isAtEnd =
+    !connected || readonly || !hasSingleSelectedEnv || currentIdx >= slist.length - 1;
 
   // rendering
   // ---------

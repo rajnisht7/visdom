@@ -38,8 +38,7 @@ def valid_port(value):
     Validate that the port is an integer in the range [1, 65535].
     Note: Port 0 is excluded for HTTP/browser use because browsers block it
     with `ERR_UNSAFE_PORT`.
-
-    Raises PortValidationError so argparse preserves the custom message when
+    It raises PortValidationError so argparse preserves the custom message when
     used as a `type=` argument, while programmatic callers can still treat it
     as a ValueError.
     """
@@ -50,9 +49,7 @@ def valid_port(value):
     except (TypeError, ValueError):
         raise PortValidationError(f"Port must be an integer, got: '{value}'")
     if not (1 <= port <= MAX_PORT):
-        raise PortValidationError(
-            f"Port must be between 1 and {MAX_PORT}, got: {port}"
-        )
+        raise PortValidationError(f"Port must be between 1 and {MAX_PORT}, got: {port}")
     return port
 
 

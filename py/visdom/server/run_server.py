@@ -29,22 +29,30 @@ from visdom.utils.server_utils import hash_password, set_cookie
 MAX_PORT = 65535
 
 
+class PortValidationError(ValueError, argparse.ArgumentTypeError):
+    """Validation error for port values that works for argparse and callers."""
+
+
 def valid_port(value):
     """
     Validate that the port is an integer in the range [1, 65535].
     Note: Port 0 is excluded for HTTP/browser use because browsers block it
     with `ERR_UNSAFE_PORT`.
-    It raises ValueError, and argparse automatically converts this to
-    ArgumentTypeError when used as a `type=` argument.
+
+    Raises PortValidationError so argparse preserves the custom message when
+    used as a `type=` argument, while programmatic callers can still treat it
+    as a ValueError.
     """
     if isinstance(value, (bool, float)):
-        raise ValueError(f"Port must be an integer, got: '{value}'")
+        raise PortValidationError(f"Port must be an integer, got: '{value}'")
     try:
         port = int(value)
     except (TypeError, ValueError):
-        raise ValueError(f"Port must be an integer, got: '{value}'")
+        raise PortValidationError(f"Port must be an integer, got: '{value}'")
     if not (1 <= port <= MAX_PORT):
-        raise ValueError(f"Port must be between 1 and {MAX_PORT}, got: {port}")
+        raise PortValidationError(
+            f"Port must be between 1 and {MAX_PORT}, got: {port}"
+        )
     return port
 
 

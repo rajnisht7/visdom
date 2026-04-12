@@ -62,6 +62,22 @@ function EnvControls(props) {
     })
   );
 
+  const currentIdx = slist.indexOf(envIDs[0]);
+
+  const onPrevEnv = () => {
+    if (currentIdx > 0) {
+      onEnvSelect([slist[currentIdx - 1]]);
+    }
+  };
+
+  const onNextEnv = () => {
+    if (currentIdx < slist.length - 1) {
+      onEnvSelect([slist[currentIdx + 1]]);
+    }
+  };
+  const isAtStart = !connected || readonly || currentIdx <= 0;
+  const isAtEnd   = !connected || readonly || currentIdx >= slist.length - 1;
+
   // rendering
   // ---------
   return (
@@ -95,6 +111,24 @@ function EnvControls(props) {
             dropdownMatchSelectWidth={false}
             onChange={onEnvSelect}
           />
+          <div className="env-arrow-wrapper">
+            <button
+              className="env-arrow-btn"
+              title="Previous Environment"
+              disabled={isAtStart}
+              onClick={onPrevEnv}
+            >
+              ▲
+            </button>
+            <button
+              className="env-arrow-btn"
+              title="Next Environment"
+              disabled={isAtEnd}
+              onClick={onNextEnv}
+            >
+              ▼
+            </button>
+          </div>
         </div>
         <button
           id="clear-button"

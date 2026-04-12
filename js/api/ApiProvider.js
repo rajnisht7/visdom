@@ -130,7 +130,7 @@ const ApiProvider = ({ children }) => {
       case 'layout_update':
         apiHandlers.current.onLayoutMessage({
           data: cmd.data,
-          update: cmd.command == 'layout_update',
+          update: cmd.command === 'layout_update',
         });
         break;
       case 'env_update':

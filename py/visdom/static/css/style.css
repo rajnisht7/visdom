@@ -213,7 +213,7 @@ doesn't override our desire to make them non-interactable */
 .rc-tree-select-selection--multiple {
     max-height: 34px;
     min-height: 34px;
-    overflow-y: hidden;
+    overflow-y: auto;
 }
 
 .rc-tree-select-selection--multiple .rc-tree-select-selection__clear {

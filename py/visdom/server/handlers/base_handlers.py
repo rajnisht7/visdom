@@ -47,6 +47,7 @@ class BaseHandler(tornado.web.RequestHandler):
         super(BaseHandler, self).__init__(*request, **kwargs)
 
     def set_default_headers(self):
+        super().set_default_headers()
         self.set_header(
             "Content-Security-Policy",
             "default-src 'self'; "

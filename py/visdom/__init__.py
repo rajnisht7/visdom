@@ -673,7 +673,7 @@ class Visdom(object):
                         on_error=on_error,
                         on_close=on_close,
                         header={
-                            "Cookie: user_password="
+                            "Cookie": "user_password="
                             + self.session.cookies.get("user_password", "")
                         },
                     )

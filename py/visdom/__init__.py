@@ -581,7 +581,7 @@ class Visdom(object):
                 for handler in list(self.event_handlers.get(message["target"], [])):
                     handler(message)
 
-        def on_close(ws):
+        def on_close(ws, close_status_code, close_msg):
             self.socket_alive = False
 
         def run_socket(*args):

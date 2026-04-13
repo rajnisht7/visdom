@@ -769,6 +769,97 @@ const App = () => {
     }
   });
 
+  const exportCurrentEnvToHtml = () => {
+    if (!storeData.panes || Object.keys(storeData.panes).length === 0) {
+      alert('Koi pane nahi hai export karne ke liye!');
+      return;
+    }
+
+    const title = `Visdom - ${selection.envIDs.join('+')} - ${new Date()
+      .toISOString()
+      .slice(0, 19)}`;
+
+    let html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${title}</title>
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f8f9fa; }
+    .pane { margin-bottom: 20px; border: 1px solid #ddd; border-radius: 4px; overflow: hidden; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .pane-title { background: #337ab7; color: white; padding: 10px 15px; font-weight: bold; font-size: 16px; }
+    .content { padding: 15px; min-height: 200px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 style="text-align:center; margin-bottom:40px; color:#337ab7;">${title}</h1>
+    <div class="row">`;
+
+    Object.keys(storeData.panes).forEach((id) => {
+      const pane = storeData.panes[id];
+      const layoutItem = storeData.layout.find((l) => l.i === id);
+      if (!layoutItem) return;
+
+      html += `
+        <div class="col-xs-12 col-md-6 col-lg-4">
+          <div class="pane">
+            <div class="pane-title">${
+              pane.title || pane.type.toUpperCase()
+            }</div>
+            <div class="content" id="plot-${id}"></div>
+          </div>
+        </div>`;
+
+      // Plot pane
+      if (pane.type === 'plot' && pane.content?.data) {
+        html += `
+        <script>
+          (function() {
+            const data = ${JSON.stringify(pane.content.data)};
+            const layout = ${JSON.stringify(pane.content.layout || {})};
+            Plotly.newPlot('plot-${id}', data, layout, {responsive: true, scrollZoom: true});
+          })();
+        </script>`;
+      }
+      // Image pane
+      else if (
+        (pane.type === 'image' || pane.type === 'image_history') &&
+        pane.content?.src
+      ) {
+        html += `
+        <script>
+          document.getElementById('plot-${id}').innerHTML = '<img src="${pane.content.src}" style="max-width:100%; height:auto; display:block; margin:auto;">';
+        </script>`;
+      }
+      // Text pane
+      else if (pane.type === 'text' && pane.content) {
+        html += `
+        <script>
+          document.getElementById('plot-${id}').innerHTML = \`${pane.content}\`;
+        </script>`;
+      }
+    });
+
+    html += `
+    </div>
+  </div>
+</body>
+</html>`;
+
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `visdom_${selection.envIDs.join('_')}_${new Date()
+      .toISOString()
+      .slice(0, 19)}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   let modals = [
     <EnvModal
       key="EnvModal"
@@ -813,6 +904,7 @@ const App = () => {
       }}
       onViewChange={updateToLayout}
       onViewManageButton={() => setShowViewModal(!showViewModal)}
+      onExportHtml={exportCurrentEnvToHtml}
     />
   );
   let filterControl = (

@@ -653,7 +653,7 @@ class Visdom(object):
             logger.error(error)
             ws.close()
 
-        def on_close(ws):
+        def on_close(ws, close_status_code, close_msg):
             self.socket_alive = False
 
         def run_socket(*args):

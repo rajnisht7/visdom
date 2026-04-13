@@ -55,7 +55,9 @@ class BaseHandler(tornado.web.RequestHandler):
             "connect-src 'self' ws: wss:; "
             "img-src 'self' data: blob:; "
             "media-src 'self' data: blob:; "
-            "font-src 'self' data:;",
+            "font-src 'self' data:; "
+            "object-src 'none'; "
+            "base-uri 'self';",
         )
 
     def get_current_user(self):

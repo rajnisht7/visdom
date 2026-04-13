@@ -14,12 +14,12 @@ LICENSE file in the root directory of this source tree.
     <meta charset="utf-8" />
     <title>visdom</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta http-equiv="Content-Security-Policy" 
-        content="default-src 'self' 
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'
                  script-src 'self' 'unsafe-inline' 'unsafe-eval';
-				 style-src 'self' 'unsafe-inline';
+                 style-src 'self' 'unsafe-inline';
                  connect-src 'self' ws: wss:;
-				 img-src 'self' data: blob:;
+                 img-src 'self' data: blob:;
                  font-src 'self' data:;">
 
     <link rel="shortcut icon" href="favicon.png">
@@ -38,7 +38,7 @@ LICENSE file in the root directory of this source tree.
     <script defer src={{ static_url("js/layout_bin_packer.js") }}></script>
 
     <!-- Mathjax -->
-	<script defer type='text/javascript' src={{ static_url('js/mathjax/2.7.5/MathJax.js') }}></script>
+    <script defer type='text/javascript' src={{ static_url('js/mathjax/2.7.5/MathJax.js') }}></script>
     <script type='text/x-mathjax-config'>MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']], processEscapes: true}});</script>
     <script defer type='text/javascript' src={{ static_url('js/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js') }}></script>
 
@@ -46,7 +46,7 @@ LICENSE file in the root directory of this source tree.
     <script defer src={{ static_url("js/plotly-plotly.min.js") }}></script>
 
     <!-- Network-Graph-->
-	<script defer src={{static_url("js/d3.v3.min.js")}}></script>
+    <script defer src={{static_url("js/d3.v3.min.js")}}></script>
     <script defer src={{static_url("js/d3-selection-multi.v1.js")}}></script>
     <script defer src={{static_url("js/saveSvgAsPng.js")}}></script>
 

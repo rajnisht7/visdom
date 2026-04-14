@@ -168,8 +168,8 @@ function renderContent(id, pane, pc) {
     }
     traces.push({
       type: 'scatter', mode: 'markers+text',
-      x:            nodes.map((n) => pos[n.id !== undefined ? n.id : nodes.indexOf(n)].x),
-      y:            nodes.map((n) => pos[n.id !== undefined ? n.id : nodes.indexOf(n)].y),
+      x: nodes.map((n, i) => pos[n.id !== undefined ? n.id : i].x),
+      y: nodes.map((n, i) => pos[n.id !== undefined ? n.id : i].y),
       text:         nodes.map((n) => String(n.label !== undefined ? n.label : (n.id !== undefined ? n.id : ''))),
       textposition: 'top center',
       marker:       { size: 10, color: '#337ab7', opacity: 0.85 },

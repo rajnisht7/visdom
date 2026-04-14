@@ -31,7 +31,7 @@ import {
   PANES,
   ROW_HEIGHT,
 } from './settings';
-import buildExportHtml from './template/exportTemplate.js';
+import buildExportHtml from './template/exportTemplate';
 import ConnectionIndicator from './topbar/ConnectionIndicator';
 import EnvControls from './topbar/EnvControls';
 import FilterControls from './topbar/FilterControls';

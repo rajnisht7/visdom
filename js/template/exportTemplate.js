@@ -55,7 +55,12 @@ function renderContent(id, pane, pc) {
     const w = mkEl('div');
     w.style.cssText = 'width:100%;height:100%;min-height:160px';
     pc.appendChild(w);
-    Plotly.newPlot(w, c.data, layout, { responsive: true, scrollZoom: true });
+    Plotly.newPlot(
+      w,
+      c.data,
+      layout,
+      { responsive: true, scrollZoom: true }
+    );
     plotEls[id] = w;
     return;
   }

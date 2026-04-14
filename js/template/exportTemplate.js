@@ -1,20 +1,6 @@
-/**
- * buildExportHtml
- *
- * Pure function — no React or app-state dependencies.
- * Takes pre-processed data from exportCurrentEnvToHtml and returns
- * a self-contained HTML string ready for download.
- *
- * @param {string}   title     — page / h1 title
- * @param {Object}   paneData  — { [id]: { type, title, content, selected, initW, initH } }
- * @param {string[]} validIds  — pane ids in desired render order
- * @returns {string} complete HTML document
- */
-export function buildExportHtml(title, paneData, validIds) {
-  // Sentinel: split so the browser parser never sees a raw </script> inside
-  // the outer template-literal <script> block.
-  const S = '<' + '/script>';
 
+export function buildExportHtml(title, paneData, validIds) {
+  const S = '<' + '/script>';
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -48,7 +34,6 @@ h1{text-align:center;color:#337ab7;font-size:1.2rem;margin:0 0 16px}
 const DATA = ${JSON.stringify(paneData)};
 const IDS  = ${JSON.stringify(validIds)};
 
-// Tracks Plotly wrapper divs by pane id — used only for resize callbacks.
 const plotEls = {};
 
 function mkEl(tag, cls) {
@@ -61,7 +46,7 @@ function renderContent(id, pane, pc) {
   const c = pane.content;
   const t = pane.type;
 
-  // ── Any Plotly-compatible pane (plot, surface, or unknown with .data) ──
+  // Any Plotly-compatible pane (plot, surface, or unknown with .data)
   if (c && c.data) {
     const layout = Object.assign({}, c.layout || {});
     layout.autosize = true;
@@ -75,7 +60,7 @@ function renderContent(id, pane, pc) {
     return;
   }
 
-  // ── Image ──────────────────────────────────────────────────────────────
+  // Image
   if (t === 'image') {
     const src = c && (c.src || (typeof c === 'string' ? c : null));
     if (!src) { pc.innerHTML = '<p class="note">Image unavailable</p>'; return; }
@@ -85,7 +70,7 @@ function renderContent(id, pane, pc) {
     return;
   }
 
-  // ── Image history ──────────────────────────────────────────────────────
+  // Image history
   if (t === 'image_history') {
     let src = c && c.src;
     if (!src && Array.isArray(c) && c.length) {
@@ -100,7 +85,7 @@ function renderContent(id, pane, pc) {
     return;
   }
 
-  // ── Text ───────────────────────────────────────────────────────────────
+  // Text
   if (t === 'text') {
     const d = mkEl('div', 'pad');
     d.style.fontSize = '13px';
@@ -109,7 +94,7 @@ function renderContent(id, pane, pc) {
     return;
   }
 
-  // ── SVG ────────────────────────────────────────────────────────────────
+  // SVG
   if (t === 'svg') {
     const raw = c ? (c.content || (typeof c === 'string' ? c : '')) : '';
     const d = mkEl('div', 'pad');
@@ -121,7 +106,7 @@ function renderContent(id, pane, pc) {
     return;
   }
 
-  // ── Audio ──────────────────────────────────────────────────────────────
+  // Audio
   if (t === 'audio') {
     const src = c && (c.src || c.contentUrl || (typeof c === 'string' ? c : null));
     if (!src) { pc.innerHTML = '<p class="note">Audio unavailable</p>'; return; }
@@ -131,7 +116,7 @@ function renderContent(id, pane, pc) {
     return;
   }
 
-  // ── Video ──────────────────────────────────────────────────────────────
+  // Video
   if (t === 'video') {
     const src = c && (c.src || c.contentUrl || (typeof c === 'string' ? c : null));
     if (!src) { pc.innerHTML = '<p class="note">Video unavailable</p>'; return; }
@@ -141,7 +126,7 @@ function renderContent(id, pane, pc) {
     return;
   }
 
-  // ── Properties ─────────────────────────────────────────────────────────
+  // Properties
   if (t === 'properties') {
     const props = Array.isArray(c) ? c : (c && c.properties) || [];
     const tbl = mkEl('table');
@@ -157,7 +142,7 @@ function renderContent(id, pane, pc) {
     return;
   }
 
-  // ── Network — Plotly scatter, no extra CDN ─────────────────────────────
+  // Network -> Plotly scatter
   // Circular initial layout; edges as one line trace with null separators.
   if (t === 'network') {
     const nodes = (c && c.nodes) || [];
@@ -205,21 +190,19 @@ function renderContent(id, pane, pc) {
     return;
   }
 
-  // ── Embeddings — scatter via Plotly, three format variants ─────────────
+  // Embeddings
   if (t === 'embeddings') {
     let xs, ys, labels = (c && c.labels) || [];
 
-    // Format A: { points|embeddings: [[x, y], ...] }
     const pts = c && (c.points || c.embeddings);
     if (Array.isArray(pts) && pts.length) {
       xs = pts.map((p) => p[0]);
       ys = pts.map((p) => p[1]);
     }
-    // Format B: { x: [...], y: [...] }
     else if (c && Array.isArray(c.x) && Array.isArray(c.y)) {
       xs = c.x; ys = c.y;
     }
-    // Format C: { X: [[x, y], ...], Y: [...] }  (common in ML libs)
+ 
     else if (c && Array.isArray(c.X) && c.X.length) {
       xs = c.X.map((p) => p[0]);
       ys = c.X.map((p) => p[1]);
@@ -264,8 +247,6 @@ function renderPane(id) {
   board.appendChild(pw);
 
   renderContent(id, pane, pc);
-
-  // On pane resize, tell Plotly to reflow. id is from closure — no state mutation.
   if (window.ResizeObserver && plotEls[id]) {
     new ResizeObserver(() => {
       try { Plotly.Plots.resize(plotEls[id]); } catch (_) {}

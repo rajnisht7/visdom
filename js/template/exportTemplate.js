@@ -1,5 +1,4 @@
-
-export function buildExportHtml(title, paneData, validIds) {
+function buildExportHtml(title, paneData, validIds) {
   const S = '<' + '/script>';
   return `<!DOCTYPE html>
 <html lang="en">
@@ -259,3 +258,6 @@ ${S}
 </body>
 </html>`;
 }
+
+export default buildExportHtml;
+

@@ -796,8 +796,12 @@ const App = () => {
     const sortedIds = Object.keys(storeData.panes).sort((a, b) => {
       const la = layoutMap.get(a);
       const lb = layoutMap.get(b);
-      if (!la || !lb) return 0;
-      return la.y !== lb.y ? la.y - lb.y : la.x - lb.x;
+      if (!la && !lb) return a.localeCompare(b);
+      if (!la) return 1;
+      if (!lb) return -1;
+      if (la.y !== lb.y) return la.y - lb.y;
+      if (la.x !== lb.x) return la.x - lb.x;
+      return a.localeCompare(b);
     });
 
     const paneData = {};

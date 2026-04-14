@@ -770,7 +770,7 @@ const App = () => {
   });
   const exportCurrentEnvToHtml = () => {
     if (!storeData.panes || Object.keys(storeData.panes).length === 0) {
-      alert('No Pane available to export');
+      alert('No panes available to export');
       return;
     }
 

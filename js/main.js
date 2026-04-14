@@ -888,7 +888,7 @@ const App = () => {
     a.download = `visdom_${selection.envIDs.join('_')}_${timestamp}.html`;
     document.body.appendChild(a);
     a.click();
-    ocument.body.removeChild(a);
+    document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 100);
   };
 

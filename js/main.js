@@ -768,10 +768,9 @@ const App = () => {
       );
     }
   });
-
   const exportCurrentEnvToHtml = () => {
     if (!storeData.panes || Object.keys(storeData.panes).length === 0) {
-      alert('No pane available to download');
+      alert('Koi pane nahi hai export karne ke liye!');
       return;
     }
 
@@ -788,9 +787,13 @@ const App = () => {
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; background: #f8f9fa; }
-    .pane { margin-bottom: 20px; border: 1px solid #ddd; border-radius: 4px; overflow: hidden; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .pane { margin-bottom: 25px; border: 1px solid #ddd; border-radius: 4px; overflow: hidden; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     .pane-title { background: #337ab7; color: white; padding: 10px 15px; font-weight: bold; font-size: 16px; }
-    .content { padding: 15px; min-height: 200px; }
+    .content { 
+      padding: 15px 15px 55px 15px;   /* ← yahan extra bottom padding diya */
+      min-height: 260px;               /* ← height bhi badhai taaki labels fit ho jaye */
+      text-align: center; 
+    }
   </style>
 </head>
 <body>
@@ -818,27 +821,55 @@ const App = () => {
         html += `
         <script>
           (function() {
-            const data = ${JSON.stringify(pane.content.data)};
-            const layout = ${JSON.stringify(pane.content.layout || {})};
+            let data = ${JSON.stringify(pane.content.data)};
+            let layout = ${JSON.stringify(pane.content.layout || {})};
+            
+            // Extra bottom margin to prevent label clipping
+            if (!layout.margin) layout.margin = {};
+            layout.margin.b = Math.max(layout.margin.b || 0, 80);
+            
             Plotly.newPlot('plot-${id}', data, layout, {responsive: true, scrollZoom: true});
           })();
         </script>`;
       }
-      // Image pane
-      else if (
-        (pane.type === 'image' || pane.type === 'image_history') &&
-        pane.content?.src
-      ) {
-        html += `
+      // Image History
+      else if (pane.type === 'image' || pane.type === 'image_history') {
+        let imgSrc = '';
+        if (pane.content?.src) {
+          imgSrc = pane.content.src;
+        } else if (Array.isArray(pane.content) && pane.content.length > 0) {
+          const idx =
+            typeof pane.selected === 'number' && pane.selected >= 0
+              ? pane.selected
+              : pane.content.length - 1;
+          const selectedImage = pane.content[idx];
+          imgSrc = selectedImage?.src || selectedImage;
+        }
+
+        if (imgSrc) {
+          const safeSrc = JSON.stringify(String(imgSrc)).slice(1, -1);
+          html += `
         <script>
-          document.getElementById('plot-${id}').innerHTML = '<img src="${pane.content.src}" style="max-width:100%; height:auto; display:block; margin:auto;">';
+          (function() {
+            const img = document.createElement('img');
+            img.src = "${safeSrc}";
+            img.style.maxWidth = '100%';
+            img.style.height = 'auto';
+            img.style.display = 'block';
+            img.style.margin = 'auto';
+            document.getElementById('plot-${id}').appendChild(img);
+          })();
         </script>`;
+        }
       }
       // Text pane
       else if (pane.type === 'text' && pane.content) {
+        const safeContent = String(pane.content)
+          .replace(/<\/script>/gi, '<\\/script>')
+          .replace(/\\/g, '\\\\');
         html += `
         <script>
-          document.getElementById('plot-${id}').innerHTML = \`${pane.content}\`;
+          document.getElementById('plot-${id}').innerHTML = \`${safeContent}\`;
         </script>`;
       }
     });

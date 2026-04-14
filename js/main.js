@@ -887,8 +887,10 @@ const App = () => {
     a.download = `visdom_${selection.envIDs.join('_')}_${new Date()
       .toISOString()
       .slice(0, 19)}.html`;
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
+    ocument.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 100);
   };
 
   let modals = [

@@ -56,7 +56,7 @@ function renderContent(id, pane, pc) {
   const t = pane.type;
 
   // Any Plotly-compatible pane (plot, surface, or unknown with .data)
-  if (c && c.data) {
+  if ((t === 'plot' || t === 'surface') && c && c.data) {
     const layout = Object.assign({}, c.layout || {});
     layout.autosize = true;
     if (!layout.margin) layout.margin = {};

@@ -14,8 +14,9 @@ h1{text-align:center;color:#337ab7;font-size:1.2rem;margin:0 0 16px}
 .pw{background:#fff;border:1px solid #d1d5db;border-radius:5px;
     box-shadow:0 1px 5px rgba(0,0,0,.09);display:flex;flex-direction:column;
     resize:both;overflow:hidden;min-width:180px;min-height:120px}
-.ph{background:#337ab7;color:#fff;padding:6px 10px;font-size:12px;font-weight:bold;
-    flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ph{background:#337ab7;color:#fff;padding:6px 10px;font-size:12px;
+    font-weight:bold;flex-shrink:0;white-space:nowrap;overflow:hidden;
+    text-overflow:ellipsis}
 .pc{flex:1;overflow:auto;min-height:0;position:relative}
 .pc img,.pc video{max-width:100%;height:auto;display:block;margin:auto}
 .pc audio{width:100%;display:block}
@@ -45,16 +46,20 @@ function renderContent(id, pane, pc) {
   const c = pane.content;
   const t = pane.type;
 
-  // Any Plotly-compatible pane (plot, surface, or unknown with .data)
+  // Any Plotly-compatible pane
   if (c && c.data) {
     const layout = Object.assign({}, c.layout || {});
     layout.autosize = true;
     if (!layout.margin) layout.margin = {};
     layout.margin.b = Math.max(layout.margin.b || 0, 50);
+
     const w = mkEl('div');
     w.style.cssText = 'width:100%;height:100%;min-height:160px';
     pc.appendChild(w);
-    Plotly.newPlot(w, c.data, layout, { responsive: true, scrollZoom: true });
+    Plotly.newPlot(w, c.data, layout, {
+      responsive: true,
+      scrollZoom: true
+    });
     plotEls[id] = w;
     return;
   }
@@ -62,10 +67,15 @@ function renderContent(id, pane, pc) {
   // Image
   if (t === 'image') {
     const src = c && (c.src || (typeof c === 'string' ? c : null));
-    if (!src) { pc.innerHTML = '<p class="note">Image unavailable</p>'; return; }
+    if (!src) {
+      pc.innerHTML = '<p class="note">Image unavailable</p>';
+      return;
+    }
     const d = mkEl('div', 'pad');
-    const img = mkEl('img'); img.src = src;
-    d.appendChild(img); pc.appendChild(d);
+    const img = mkEl('img');
+    img.src = src;
+    d.appendChild(img);
+    pc.appendChild(d);
     return;
   }
 
@@ -73,14 +83,21 @@ function renderContent(id, pane, pc) {
   if (t === 'image_history') {
     let src = c && c.src;
     if (!src && Array.isArray(c) && c.length) {
-      const idx = typeof pane.selected === 'number' ? pane.selected : c.length - 1;
+      const idx = typeof pane.selected === 'number'
+        ? pane.selected
+        : c.length - 1;
       const item = c[Math.max(0, idx)];
       src = item && (item.src || (typeof item === 'string' ? item : null));
     }
-    if (!src) { pc.innerHTML = '<p class="note">Image unavailable</p>'; return; }
+    if (!src) {
+      pc.innerHTML = '<p class="note">Image unavailable</p>';
+      return;
+    }
     const d = mkEl('div', 'pad');
-    const img = mkEl('img'); img.src = String(src);
-    d.appendChild(img); pc.appendChild(d);
+    const img = mkEl('img');
+    img.src = String(src);
+    d.appendChild(img);
+    pc.appendChild(d);
     return;
   }
 
@@ -95,12 +112,17 @@ function renderContent(id, pane, pc) {
 
   // SVG
   if (t === 'svg') {
-    const raw = c ? (c.content || (typeof c === 'string' ? c : '')) : '';
+    const raw = c
+      ? (c.content || (typeof c === 'string' ? c : ''))
+      : '';
     const d = mkEl('div', 'pad');
     d.style.textAlign = 'center';
     d.innerHTML = raw;
     const s = d.querySelector('svg');
-    if (s) { s.style.maxWidth = '100%'; s.style.height = 'auto'; }
+    if (s) {
+      s.style.maxWidth = '100%';
+      s.style.height = 'auto';
+    }
     pc.appendChild(d);
     return;
   }
@@ -108,20 +130,33 @@ function renderContent(id, pane, pc) {
   // Audio
   if (t === 'audio') {
     const src = c && (c.src || c.contentUrl || (typeof c === 'string' ? c : null));
-    if (!src) { pc.innerHTML = '<p class="note">Audio unavailable</p>'; return; }
+    if (!src) {
+      pc.innerHTML = '<p class="note">Audio unavailable</p>';
+      return;
+    }
     const d = mkEl('div', 'pad');
-    const a = mkEl('audio'); a.controls = true; a.src = String(src);
-    d.appendChild(a); pc.appendChild(d);
+    const a = mkEl('audio');
+    a.controls = true;
+    a.src = String(src);
+    d.appendChild(a);
+    pc.appendChild(d);
     return;
   }
 
   // Video
   if (t === 'video') {
     const src = c && (c.src || c.contentUrl || (typeof c === 'string' ? c : null));
-    if (!src) { pc.innerHTML = '<p class="note">Video unavailable</p>'; return; }
+    if (!src) {
+      pc.innerHTML = '<p class="note">Video unavailable</p>';
+      return;
+    }
     const d = mkEl('div', 'pad');
-    const v = mkEl('video'); v.controls = true; v.src = String(src); v.style.maxWidth = '100%';
-    d.appendChild(v); pc.appendChild(d);
+    const v = mkEl('video');
+    v.controls = true;
+    v.src = String(src);
+    v.style.maxWidth = '100%';
+    d.appendChild(v);
+    pc.appendChild(d);
     return;
   }
 
@@ -141,39 +176,57 @@ function renderContent(id, pane, pc) {
     return;
   }
 
-  // Network -> Plotly scatter
-  // Circular initial layout; edges as one line trace with null separators.
+  // Network
   if (t === 'network') {
     const nodes = (c && c.nodes) || [];
     const edges = (c && c.edges) || [];
-    if (!nodes.length) { pc.innerHTML = '<p class="note">Network: no node data</p>'; return; }
+    if (!nodes.length) {
+      pc.innerHTML = '<p class="note">Network: no node data</p>';
+      return;
+    }
 
     const step = (2 * Math.PI) / nodes.length;
-    const pos  = {};
+    const pos = {};
     nodes.forEach((n, i) => {
       const nid = n.id !== undefined ? n.id : i;
-      pos[nid] = { x: Math.cos(i * step - Math.PI / 2), y: Math.sin(i * step - Math.PI / 2) };
+      pos[nid] = {
+        x: Math.cos(i * step - Math.PI / 2),
+        y: Math.sin(i * step - Math.PI / 2)
+      };
     });
 
     const ex = [], ey = [];
     edges.forEach((e) => {
       const f = pos[e.from], t2 = pos[e.to];
-      if (f && t2) { ex.push(f.x, t2.x, null); ey.push(f.y, t2.y, null); }
+      if (f && t2) {
+        ex.push(f.x, t2.x, null);
+        ey.push(f.y, t2.y, null);
+      }
     });
 
     const traces = [];
     if (ex.length) {
-      traces.push({ type: 'scatter', mode: 'lines', x: ex, y: ey,
-                    line: { color: '#bbb', width: 1 }, hoverinfo: 'none', showlegend: false });
+      traces.push({
+        type: 'scatter',
+        mode: 'lines',
+        x: ex,
+        y: ey,
+        line: { color: '#bbb', width: 1 },
+        hoverinfo: 'none',
+        showlegend: false
+      });
     }
     traces.push({
-      type: 'scatter', mode: 'markers+text',
+      type: 'scatter',
+      mode: 'markers+text',
       x: nodes.map((n, i) => pos[n.id !== undefined ? n.id : i].x),
       y: nodes.map((n, i) => pos[n.id !== undefined ? n.id : i].y),
-      text:         nodes.map((n) => String(n.label !== undefined ? n.label : (n.id !== undefined ? n.id : ''))),
+      text: nodes.map((n) => String(n.label !== undefined
+        ? n.label
+        : (n.id !== undefined ? n.id : ''))),
       textposition: 'top center',
-      marker:       { size: 10, color: '#337ab7', opacity: 0.85 },
-      showlegend:   false,
+      marker: { size: 10, color: '#337ab7', opacity: 0.85 },
+      showlegend: false,
     });
 
     const w = mkEl('div');
@@ -181,9 +234,9 @@ function renderContent(id, pane, pc) {
     pc.appendChild(w);
     Plotly.newPlot(w, traces, {
       autosize: true,
-      margin:   { t: 10, b: 10, l: 10, r: 10 },
-      xaxis:    { showgrid: false, zeroline: false, showticklabels: false },
-      yaxis:    { showgrid: false, zeroline: false, showticklabels: false },
+      margin: { t: 10, b: 10, l: 10, r: 10 },
+      xaxis: { showgrid: false, zeroline: false, showticklabels: false },
+      yaxis: { showgrid: false, zeroline: false, showticklabels: false },
     }, { responsive: true });
     plotEls[id] = w;
     return;
@@ -197,12 +250,10 @@ function renderContent(id, pane, pc) {
     if (Array.isArray(pts) && pts.length) {
       xs = pts.map((p) => p[0]);
       ys = pts.map((p) => p[1]);
-    }
-    else if (c && Array.isArray(c.x) && Array.isArray(c.y)) {
-      xs = c.x; ys = c.y;
-    }
- 
-    else if (c && Array.isArray(c.X) && c.X.length) {
+    } else if (c && Array.isArray(c.x) && Array.isArray(c.y)) {
+      xs = c.x;
+      ys = c.y;
+    } else if (c && Array.isArray(c.X) && c.X.length) {
       xs = c.X.map((p) => p[0]);
       ys = c.X.map((p) => p[1]);
       if (!labels.length && c.Y) labels = c.Y;
@@ -213,13 +264,18 @@ function renderContent(id, pane, pc) {
       w.style.cssText = 'width:100%;height:100%;min-height:160px';
       pc.appendChild(w);
       Plotly.newPlot(w, [{
-        type: 'scatter', mode: labels.length ? 'markers+text' : 'markers',
-        x: xs, y: ys,
-        text:         labels,
+        type: 'scatter',
+        mode: labels.length ? 'markers+text' : 'markers',
+        x: xs,
+        y: ys,
+        text: labels,
         textposition: 'top center',
-        textfont:     { size: 9 },
-        marker:       { size: 5, opacity: 0.7 },
-      }], { autosize: true, margin: { t: 20, b: 30, l: 30, r: 10 } }, { responsive: true });
+        textfont: { size: 9 },
+        marker: { size: 5, opacity: 0.7 },
+      }], {
+        autosize: true,
+        margin: { t: 20, b: 30, l: 30, r: 10 }
+      }, { responsive: true });
       plotEls[id] = w;
       return;
     }
@@ -231,14 +287,15 @@ function renderContent(id, pane, pc) {
 }
 
 function renderPane(id) {
-  const pane  = DATA[id];
+  const pane = DATA[id];
   const board = document.getElementById('board');
 
   const pw = mkEl('div', 'pw');
-  pw.style.width  = pane.initW + 'px';
+  pw.style.width = pane.initW + 'px';
   pw.style.height = pane.initH + 'px';
 
-  const ph = mkEl('div', 'ph'); ph.textContent = pane.title;
+  const ph = mkEl('div', 'ph');
+  ph.textContent = pane.title;
   const pc = mkEl('div', 'pc');
 
   pw.appendChild(ph);
@@ -246,6 +303,7 @@ function renderPane(id) {
   board.appendChild(pw);
 
   renderContent(id, pane, pc);
+
   if (window.ResizeObserver && plotEls[id]) {
     new ResizeObserver(() => {
       try { Plotly.Plots.resize(plotEls[id]); } catch (_) {}
@@ -260,4 +318,3 @@ ${S}
 }
 
 export default buildExportHtml;
-

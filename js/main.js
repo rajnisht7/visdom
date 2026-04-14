@@ -36,6 +36,7 @@ import EnvControls from './topbar/EnvControls';
 import FilterControls from './topbar/FilterControls';
 import ViewControls from './topbar/ViewControls';
 import WidthProvider from './Width';
+import { buildExportHtml } from './template/exportTemplate.js';
 
 const ReactGridLayout = require('react-grid-layout');
 const jsonpatch = require('fast-json-patch');
@@ -770,122 +771,50 @@ const App = () => {
   });
   const exportCurrentEnvToHtml = () => {
     if (!storeData.panes || Object.keys(storeData.panes).length === 0) {
-      alert('No panes available to export');
+      alert('No Pane Available to export');
       return;
     }
 
-    const title = `Visdom - ${selection.envIDs.join('+')} - ${new Date()
+    const safeTs = new Date()
       .toISOString()
-      .slice(0, 19)}`;
+      .slice(0, 16)
+      .replace('T', '_')
+      .replace(':', '-');
+    const title = `Visdom – ${selection.envIDs.join('+')} – ${safeTs}`;
 
-    let html = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>${title}</title>
-  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background: #f8f9fa; }
-    .pane { margin-bottom: 25px; border: 1px solid #ddd; border-radius: 4px; overflow: hidden; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    .pane-title { background: #337ab7; color: white; padding: 10px 15px; font-weight: bold; font-size: 16px; }
-    .content { 
-      padding: 15px 15px 55px 15px;  
-      min-height: 260px;              
-      text-align: center; 
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1 style="text-align:center; margin-bottom:40px; color:#337ab7;">${title}</h1>
-    <div class="row">`;
+    const layoutMap = new Map(storeData.layout.map((l) => [l.i, l]));
 
-    Object.keys(storeData.panes).forEach((id) => {
-      const pane = storeData.panes[id];
-      const layoutItem = storeData.layout.find((l) => l.i === id);
-      if (!layoutItem) return;
-
-      html += `
-        <div class="col-xs-12 col-md-6 col-lg-4">
-          <div class="pane">
-            <div class="pane-title">${
-              pane.title || pane.type.toUpperCase()
-            }</div>
-            <div class="content" id="plot-${id}"></div>
-          </div>
-        </div>`;
-
-      // Plot pane
-      if (pane.type === 'plot' && pane.content?.data) {
-        html += `
-        <script>
-          (function() {
-            let data = ${JSON.stringify(pane.content.data)};
-            let layout = ${JSON.stringify(pane.content.layout || {})};
-            
-            // Extra bottom margin to prevent label clipping
-            if (!layout.margin) layout.margin = {};
-            layout.margin.b = Math.max(layout.margin.b || 0, 80);
-            
-            Plotly.newPlot('plot-${id}', data, layout, {responsive: true, scrollZoom: true});
-          })();
-        </script>`;
-      }
-      // Image History
-      else if (pane.type === 'image' || pane.type === 'image_history') {
-        let imgSrc = '';
-        if (pane.content?.src) {
-          imgSrc = pane.content.src;
-        } else if (Array.isArray(pane.content) && pane.content.length > 0) {
-          const idx =
-            typeof pane.selected === 'number' && pane.selected >= 0
-              ? pane.selected
-              : pane.content.length - 1;
-          const selectedImage = pane.content[idx];
-          imgSrc = selectedImage?.src || selectedImage;
-        }
-
-        if (imgSrc) {
-          const safeSrc = JSON.stringify(String(imgSrc)).slice(1, -1);
-          html += `
-        <script>
-          (function() {
-            const img = document.createElement('img');
-            img.src = "${safeSrc}";
-            img.style.maxWidth = '100%';
-            img.style.height = 'auto';
-            img.style.display = 'block';
-            img.style.margin = 'auto';
-            document.getElementById('plot-${id}').appendChild(img);
-          })();
-        </script>`;
-        }
-      }
-      // Text pane
-      else if (pane.type === 'text' && pane.content) {
-        const safeContent = String(pane.content)
-          .replace(/<\/script>/gi, '<\\/script>')
-          .replace(/\\/g, '\\\\');
-        html += `
-        <script>
-          document.getElementById('plot-${id}').innerHTML = \`${safeContent}\`;
-        </script>`;
-      }
+    const sortedIds = Object.keys(storeData.panes).sort((a, b) => {
+      const la = layoutMap.get(a);
+      const lb = layoutMap.get(b);
+      if (!la || !lb) return 0;
+      return la.y !== lb.y ? la.y - lb.y : la.x - lb.x;
     });
 
-    html += `
-    </div>
-  </div>
-</body>
-</html>`;
+    const paneData = {};
+    sortedIds.forEach((id) => {
+      const pane = storeData.panes[id];
+      const li = layoutMap.get(id);
+      if (!li) return;
+      paneData[id] = {
+        type: pane.type,
+        title: pane.title || pane.type,
+        content: pane.content,
+        selected: pane.selected,
+        initW: Math.max(280, Math.round(w2p(li.w))),
+        initH: Math.max(200, Math.round(h2p(li.h))),
+      };
+    });
+
+    const validIds = sortedIds.filter((id) => paneData[id]);
+
+    const html = buildExportHtml(title, paneData, validIds);
 
     const blob = new Blob([html], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-    a.download = `visdom_${selection.envIDs.join('_')}_${timestamp}.html`;
+    a.download = `visdom_${selection.envIDs.join('_')}_${safeTs}.html`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

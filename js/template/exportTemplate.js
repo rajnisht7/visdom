@@ -221,12 +221,13 @@ function renderContent(id, pane, pc) {
       mode: 'markers+text',
       x: nodes.map((n, i) => pos[n.id !== undefined ? n.id : i].x),
       y: nodes.map((n, i) => pos[n.id !== undefined ? n.id : i].y),
-      text: nodes.map((n) => String(n.label !== undefined
-        ? n.label
-        : (n.id !== undefined ? n.id : ''))),
+      text: nodes.map((n) => {
+        const label = n.label !== undefined ? n.label : (n.id !== undefined ? n.id : '');
+        return String(label);
+      }),
       textposition: 'top center',
       marker: { size: 10, color: '#337ab7', opacity: 0.85 },
-      showlegend: false,
+      showlegend: false
     });
 
     const w = mkEl('div');
@@ -236,7 +237,7 @@ function renderContent(id, pane, pc) {
       autosize: true,
       margin: { t: 10, b: 10, l: 10, r: 10 },
       xaxis: { showgrid: false, zeroline: false, showticklabels: false },
-      yaxis: { showgrid: false, zeroline: false, showticklabels: false },
+      yaxis: { showgrid: false, zeroline: false, showticklabels: false }
     }, { responsive: true });
     plotEls[id] = w;
     return;
@@ -271,7 +272,7 @@ function renderContent(id, pane, pc) {
         text: labels,
         textposition: 'top center',
         textfont: { size: 9 },
-        marker: { size: 5, opacity: 0.7 },
+        marker: { size: 5, opacity: 0.7 }
       }], {
         autosize: true,
         margin: { t: 20, b: 30, l: 30, r: 10 }

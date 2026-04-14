@@ -884,9 +884,8 @@ const App = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `visdom_${selection.envIDs.join('_')}_${new Date()
-      .toISOString()
-      .slice(0, 19)}.html`;
+    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+    a.download = `visdom_${selection.envIDs.join('_')}_${timestamp}.html`;
     document.body.appendChild(a);
     a.click();
     ocument.body.removeChild(a);

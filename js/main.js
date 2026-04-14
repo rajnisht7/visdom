@@ -769,6 +769,14 @@ const App = () => {
       );
     }
   });
+  const escapeHtml = (str) => {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  };
   const exportCurrentEnvToHtml = () => {
     if (!storeData.panes || Object.keys(storeData.panes).length === 0) {
       alert('No Pane Available to export');
@@ -780,7 +788,8 @@ const App = () => {
       .slice(0, 16)
       .replace('T', '_')
       .replace(':', '-');
-    const title = `Visdom – ${selection.envIDs.join('+')} – ${safeTs}`;
+    const rawTitle = `Visdom – ${selection.envIDs.join('+')} – ${safeTs}`;
+    const title = escapeHtml(rawTitle);
 
     const layoutMap = new Map(storeData.layout.map((l) => [l.i, l]));
 

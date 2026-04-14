@@ -31,12 +31,12 @@ import {
   PANES,
   ROW_HEIGHT,
 } from './settings';
+import buildExportHtml from './template/exportTemplate.js';
 import ConnectionIndicator from './topbar/ConnectionIndicator';
 import EnvControls from './topbar/EnvControls';
 import FilterControls from './topbar/FilterControls';
 import ViewControls from './topbar/ViewControls';
 import WidthProvider from './Width';
-import buildExportHtml from './template/exportTemplate.js';
 
 const ReactGridLayout = require('react-grid-layout');
 const jsonpatch = require('fast-json-patch');

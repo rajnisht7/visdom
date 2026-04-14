@@ -790,8 +790,8 @@ const App = () => {
     .pane { margin-bottom: 25px; border: 1px solid #ddd; border-radius: 4px; overflow: hidden; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     .pane-title { background: #337ab7; color: white; padding: 10px 15px; font-weight: bold; font-size: 16px; }
     .content { 
-      padding: 15px 15px 55px 15px;   /* ← yahan extra bottom padding diya */
-      min-height: 260px;               /* ← height bhi badhai taaki labels fit ho jaye */
+      padding: 15px 15px 55px 15px;  
+      min-height: 260px;              
       text-align: center; 
     }
   </style>

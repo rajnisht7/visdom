@@ -89,6 +89,7 @@ function ViewControls(props) {
           className="btn btn-default"
           disabled={!(connected && envIDs.length > 0)}
           onClick={onExportHtml}
+          aria-label="Export as HTML"
         >
           <span className="glyphicon glyphicon-download" />
         </button>

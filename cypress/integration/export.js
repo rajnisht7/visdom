@@ -87,7 +87,7 @@ describe('Test Export Env as HTML', () => {
 
     cy.get('@alertStub').should(
       'have.been.calledWith',
-      'No panes available to export'
+      'No panes available to export.'
     );
   });
 });

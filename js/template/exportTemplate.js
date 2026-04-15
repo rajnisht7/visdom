@@ -286,8 +286,9 @@ function renderContent(id, pane, pc) {
     return;
   }
 
-  pc.innerHTML = '<p class="note">Type "'
-    + t + '" not supported for export</p>';
+  const note = mkEl('p', 'note');
+  note.textContent = 'Type "' + t + '" not supported for export';
+  pc.appendChild(note);
 }
 
 function renderPane(id) {

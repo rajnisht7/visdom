@@ -827,7 +827,9 @@ const App = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `visdom_${selection.envIDs.join('_')}_${safeTs}.html`;
+    a.download = `visdom_${selection.envIDs
+      .map((id) => String(id).replace(/[^a-zA-Z0-9._-]/g, '_'))
+      .join('_')}_${safeTs}.html`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

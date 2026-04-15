@@ -198,7 +198,10 @@ function renderContent(id, pane, pc) {
 
     const ex = [], ey = [];
     edges.forEach((e) => {
-      const f = pos[e.from], t2 = pos[e.to];
+      const from = e.from ?? (e.source && (e.source.id ?? e.source));
+      const to   = e.to   ?? (e.target && (e.target.id ?? e.target));
+      const f = pos[from];
+      const t2 = pos[to];
       if (f && t2) { ex.push(f.x, t2.x, null); ey.push(f.y, t2.y, null); }
     });
 

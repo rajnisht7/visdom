@@ -30,7 +30,7 @@ function assertSafeToken(name, value) {
 }
 
 
-module.exports = (on, config) => {
+module.exports = (on) => {
   // `on` is used to hook into various events Cypress emits
   // `config` is the resolved Cypress config
 
@@ -131,14 +131,6 @@ module.exports = (on, config) => {
 
       return numDiffPixels;
     },
-    downloads() {
-      const dir =
-        config.downloadsFolder ||
-        path.join(__dirname, '..', '..', 'cypress', 'downloads');
-
-      if (!fs.existsSync(dir)) return [];
-      return fs.readdirSync(dir);
-    },
   });
 
   on('after:screenshot', (details) => {
@@ -159,4 +151,3 @@ module.exports = (on, config) => {
     return details;
   });
 };
-

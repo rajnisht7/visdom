@@ -8,6 +8,8 @@
  */
 
 function buildExportHtml(title, paneData, validIds) {
+  const safeData = JSON.stringify(paneData).replace(/<\/script/gi, '<\\/script');
+  const safeIds  = JSON.stringify(validIds).replace(/</script/gi, '<\\/script');
   const S = '<' + '/script>';
   return `<!DOCTYPE html>
 <html lang="en">
@@ -40,8 +42,8 @@ h1{text-align:center;color:#337ab7;font-size:1.2rem;margin:0 0 16px}
 <h1>${title}</h1>
 <div id="board"></div>
 <script>
-const DATA = ${JSON.stringify(paneData)};
-const IDS  = ${JSON.stringify(validIds)};
+const DATA = ${safeData};
+const IDS  = ${safeIds};
 
 const plotEls = {};
 

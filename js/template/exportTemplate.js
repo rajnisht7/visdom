@@ -9,7 +9,7 @@
 
 function buildExportHtml(title, paneData, validIds) {
   const safeData = JSON.stringify(paneData).replace(/<\/script/gi, '<\\/script');
-  const safeIds  = JSON.stringify(validIds).replace(/</script/gi, '<\\/script');
+  const safeIds  = JSON.stringify(validIds).replace(/<\/script/gi, '<\\/script');
   const S = '<' + '/script>';
   return `<!DOCTYPE html>
 <html lang="en">

@@ -101,7 +101,7 @@ function renderContent(id, pane, pc) {
     if (!src && Array.isArray(c) && c.length) {
       const idx = typeof pane.selected === 'number'
         ? pane.selected : c.length - 1;
-      const item = c[Math.max(0, idx)];
+      const item = c[Math.min(c.length - 1, Math.max(0, idx))];
       src = item && (item.src || (typeof item === 'string' ? item : null));
     }
     if (!src) {

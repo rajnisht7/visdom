@@ -131,6 +131,11 @@ module.exports = (on) => {
 
       return numDiffPixels;
     },
+    downloads() {
+      const dir = path.join(__dirname, '../downloads');
+      if (!fs.existsSync(dir)) return [];
+      return fs.readdirSync(dir);
+    },
   });
 
   on('after:screenshot', (details) => {

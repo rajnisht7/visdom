@@ -27,7 +27,7 @@ describe('Test Export Env as HTML', () => {
     cy.run('plot_line_basic', { env });
 
     cy.get(exportButton).click();
-
+    cy.wait(1500);
     cy.task('downloads').then((files) => {
       const latest = files
         .filter((f) => f.endsWith('.html'))

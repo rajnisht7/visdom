@@ -132,7 +132,7 @@ module.exports = (on) => {
       return numDiffPixels;
     },
     downloads() {
-      const dir = path.join(__dirname, '../downloads');
+      const dir = config.downloadsFolder;
       if (!fs.existsSync(dir)) return [];
       return fs.readdirSync(dir);
     },

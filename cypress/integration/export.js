@@ -34,7 +34,7 @@ describe('Test Export Env as HTML', () => {
         .sort()
         .pop();
 
-      cy.readFile(`cypress/downloads/${latest}`).then((html) => {
+      cy.readFile(`${Cypress.config('downloadsFolder')}/${latest}`).then((html) => {
         expect(html).to.include('"type"');   
         expect(html).to.include('plotly');  
         expect(html).to.include('id="board"'); 

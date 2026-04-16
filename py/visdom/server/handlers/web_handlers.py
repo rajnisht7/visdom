@@ -701,7 +701,12 @@ class UploadEnvHandler(BaseHandler):
 
         if self.readonly:
             self.set_status(403)
-            self.write({"success": False, "error": "Uploads are disabled while the server is in readonly mode",})
+            self.write(
+                {
+                    "success": False,
+                    "error": "Uploads are disabled while the server is in readonly mode",
+                }
+            )
             return
 
         if "file" not in self.request.files:

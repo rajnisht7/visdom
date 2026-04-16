@@ -36,7 +36,7 @@ const ApiProvider = ({ children }) => {
   // Send a low-level message to the server
   const sendSocketMessage = (data) => {
     if (!_socket.current) {
-      console.warn('[ApiProvider] sendSocketMessage called but socket is not connected');
+      // console.warn('[ApiProvider] sendSocketMessage called but socket is not connected');
       return;
     }
 

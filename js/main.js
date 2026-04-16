@@ -813,6 +813,7 @@ const App = () => {
       }}
       onViewChange={updateToLayout}
       onViewManageButton={() => setShowViewModal(!showViewModal)}
+      onEnvSelect={onEnvSelect}
     />
   );
   let filterControl = (

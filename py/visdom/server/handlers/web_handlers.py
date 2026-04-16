@@ -681,3 +681,74 @@ class ErrorHandler(BaseHandler):
     def get(self, text):
         error_text = text or "test error"
         raise Exception(error_text)
+
+
+class UploadEnvHandler(BaseHandler):
+    def initialize(self, app):
+        self.state = app.state
+        self.subs = app.subs
+        self.sources = app.sources
+        self.port = app.port
+        self.env_path = app.env_path
+        self.login_enabled = app.login_enabled
+
+    @check_auth
+    def post(self):
+        # 100mb file size limit
+        MAX_SIZE = 100 * 1024 * 1024
+
+        if "file" not in self.request.files:
+            self.set_status(400)
+            self.write({"success": False, "error": "No file uploaded"})
+            return
+
+        file_info = self.request.files["file"][0]
+        filename = file_info["filename"]
+        body = file_info["body"]
+
+        if len(body) > MAX_SIZE:
+            self.set_status(413)
+            self.write(
+                {
+                    "success": False,
+                    "error": f"File is too large. Max {MAX_SIZE//(1024*1024)}MB",
+                }
+            )
+            return
+
+        try:
+            data = tornado.escape.json_decode(body)
+        except Exception:
+            self.set_status(400)
+            self.write({"success": False, "error": "Invalid JSON file"})
+            return
+
+        if not (isinstance(data, dict) and "jsons" in data and "reload" in data):
+            self.set_status(400)
+            self.write({"success": False, "error": "This is not a valid Visdom JSON"})
+            return
+
+        import time
+
+        new_eid = f"uploaded_{int(time.time())}"
+        if filename.endswith(".json"):
+            suggested_name = filename[:-5]
+            if suggested_name and suggested_name != "main":
+                new_eid = f"uploaded_{suggested_name}"
+
+        self.state[new_eid] = {"jsons": data["jsons"], "reload": data["reload"]}
+
+        if self.env_path is not None:
+            from visdom.utils.server_utils import serialize_env
+
+            serialize_env(self.state, [new_eid], env_path=self.env_path)
+
+        broadcast_envs(self)
+
+        self.write(
+            {
+                "success": True,
+                "eid": new_eid,
+                "message": f"Dashboard loaded successfully as '{new_eid}'",
+            }
+        )

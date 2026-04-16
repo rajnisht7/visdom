@@ -12,7 +12,7 @@ const ApiProvider = ({ children }) => {
 
   // ---------------- //
   // helper functions //
-  // ---------------- //
+  // ---------------- // 
 
   // Normalize window.location by removing specific path segments
   // and ensuring the pathname ends with a '/'

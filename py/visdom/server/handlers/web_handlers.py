@@ -20,6 +20,7 @@ import jsonpatch
 import logging
 import math
 import os
+import uuid
 from collections import OrderedDict
 
 try:
@@ -728,13 +729,12 @@ class UploadEnvHandler(BaseHandler):
             self.write({"success": False, "error": "This is not a valid Visdom JSON"})
             return
 
-        import time
-
-        new_eid = f"uploaded_{int(time.time())}"
+        uid = uuid.uuid4().hex[:8]
+        new_eid = f"uploaded_{uid}"
         if filename.endswith(".json"):
             suggested_name = filename[:-5]
             if suggested_name and suggested_name != "main":
-                new_eid = f"uploaded_{suggested_name}"
+                new_eid = f"uploaded_{suggested_name}_{uid}"
 
         self.state[new_eid] = {"jsons": data["jsons"], "reload": data["reload"]}
 

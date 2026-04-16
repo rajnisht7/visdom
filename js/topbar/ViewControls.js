@@ -22,6 +22,59 @@ function ViewControls(props) {
     onViewChange,
   } = props;
 
+  const fileInputRef = useRef(null);
+
+  const handleUploadDashboard = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.name.toLowerCase().endsWith('.json')) {
+      alert('Upload Valid JSON file');
+      e.target.value = '';
+      return;
+    }
+
+    if (file.size > 100 * 1024 * 1024) {
+      // 100 MB limit
+      alert('Maximum 100 MB File allowed.');
+      e.target.value = '';
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const base = window.location.origin + (window.base_url || '');
+      const res = await fetch(`${base}/upload_env`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const result = await res.json();
+
+      if (result.success) {
+        alert(`Dashboard successfully loaded as "${result.eid}"`);
+        if (props.onEnvSelect) {
+          props.onEnvSelect([result.eid]);
+        }
+      } else {
+        alert('Error: ' + (result.error || 'Upload failed'));
+      }
+    } catch (err) {
+      console.error('Upload error:', err);
+      if (!navigator.onLine) {
+        alert('Network error: Internet connection Not available');
+      } else if (err.message.includes('Failed to fetch')) {
+        alert('Cannot connect to Visdom server.\nServer chal raha hai?');
+      } else {
+        alert(`Upload failed:\n${err.message}`);
+      }
+    }
+
+    e.target.value = '';
+  };
+
   // rendering
   // ---------
   let view_options = Array.from(layoutList.keys()).map((view) => {
@@ -81,6 +134,25 @@ function ViewControls(props) {
         >
           <span className="glyphicon glyphicon-folder-open" />
         </button>
+        <button
+          data-toggle="tooltip"
+          title="Upload Dashboard JSON"
+          data-placement="bottom"
+          className="btn btn-default"
+          onClick={() => fileInputRef.current && fileInputRef.current.click()}
+          disabled={!connected}
+          aria-label="Upload JSON file"
+        >
+          <span className="glyphicon glyphicon-upload" />
+        </button>
+
+        <input
+          type="file"
+          ref={fileInputRef}
+          style={{ display: 'none' }}
+          accept=".json"
+          onChange={handleUploadDashboard}
+        />
       </div>
     </span>
   );

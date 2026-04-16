@@ -692,11 +692,17 @@ class UploadEnvHandler(BaseHandler):
         self.port = app.port
         self.env_path = app.env_path
         self.login_enabled = app.login_enabled
+        self.readonly = app.readonly
 
     @check_auth
     def post(self):
         # 100mb file size limit
         MAX_SIZE = 100 * 1024 * 1024
+
+        if self.readonly:
+            self.set_status(403)
+            self.write({"success": False, "error": "Uploads are disabled while the server is in readonly mode",})
+            return
 
         if "file" not in self.request.files:
             self.set_status(400)

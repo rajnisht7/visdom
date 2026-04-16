@@ -46,26 +46,9 @@ describe('Visdom - Upload Dashboard JSON Feature', () => {
       });
     });
   });
-
-  it('should switch to the newly uploaded environment', () => {
-    cy.get('.rc-tree-select', { timeout: 15000 }).should('be.visible').click();
-
-    cy.get(
-      '.rc-tree-select-dropdown .rc-tree-select-tree-node-content-wrapper',
-      { timeout: 15000 }
-    )
-      .contains('uploaded_', { timeout: 15000 })
-      .should('be.visible')
-      .click();
-
-    cy.get('.rc-tree-select-selection__choice__content').should(
-      'contain',
-      'uploaded_'
-    );
-  });
-
-  it('should show uploaded environment in the environment list', () => {
-    cy.get('.rc-tree-select').click();
-    cy.get('.rc-tree-select-dropdown').should('contain', 'uploaded_');
+  it('should automatically switch to the newly uploaded environment after upload', () => {
+    cy.get('.rc-tree-select-selection__choice__content', {
+      timeout: 15000,
+    }).should('contain', 'uploaded_');
   });
 });

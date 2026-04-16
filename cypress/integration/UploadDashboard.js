@@ -33,7 +33,7 @@ describe('Visdom - Upload Dashboard JSON Feature', () => {
       cy.get('input[type="file"]').selectFile(
         {
           contents: fileContent,
-          fileName: 'main1.json',
+          fileName: 'main.json',
           mimeType: 'application/json',
         },
         { force: true }

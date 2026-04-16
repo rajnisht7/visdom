@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  */
-import React, { useContext } from 'react';
+import React, { useContext, useRef } from 'react';
 
 import ApiContext from '../api/ApiContext';
 

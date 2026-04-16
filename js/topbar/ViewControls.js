@@ -140,7 +140,7 @@ function ViewControls(props) {
           data-placement="bottom"
           className="btn btn-default"
           onClick={() => fileInputRef.current && fileInputRef.current.click()}
-          disabled={!connected}
+          disabled={!(connected && !readonly)}
           aria-label="Upload JSON file"
         >
           <span className="glyphicon glyphicon-upload" />

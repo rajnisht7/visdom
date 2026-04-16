@@ -739,8 +739,6 @@ class UploadEnvHandler(BaseHandler):
         self.state[new_eid] = {"jsons": data["jsons"], "reload": data["reload"]}
 
         if self.env_path is not None:
-            from visdom.utils.server_utils import serialize_env
-
             serialize_env(self.state, [new_eid], env_path=self.env_path)
 
         broadcast_envs(self)

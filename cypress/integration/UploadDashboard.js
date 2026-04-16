@@ -29,7 +29,7 @@ describe('Visdom - Upload Dashboard JSON Feature', () => {
   });
 
   it('should successfully upload valid dashboard JSON', () => {
-    cy.fixture('main1.json').then((fileContent) => {
+    cy.fixture('main.json').then((fileContent) => {
       cy.get('input[type="file"]').selectFile(
         {
           contents: fileContent,

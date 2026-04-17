@@ -20,9 +20,7 @@ describe('Visdom - Upload Dashboard JSON Feature', () => {
       },
       { force: true }
     );
-
     cy.get('button .glyphicon-upload').parent('button').click();
-
     cy.on('window:alert', (str) => {
       expect(str.toLowerCase()).to.contain('json');
     });

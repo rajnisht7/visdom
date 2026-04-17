@@ -42,7 +42,7 @@ describe('Visdom - Upload Dashboard JSON Feature', () => {
       );
 
       cy.get('button .glyphicon-upload').parent('button').click();
-
+      cy.get('@alertStub', { timeout: 15000 }).should('have.been.called');
       cy.contains('.rc-tree-select-selection__choice__content', 'uploaded_', {
         timeout: 15000,
       }).should('exist');

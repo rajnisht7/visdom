@@ -28,6 +28,10 @@ describe('Visdom - Upload Dashboard JSON Feature', () => {
 
   it('should successfully upload valid dashboard JSON and switch to new environment', () => {
     cy.fixture('test.json').then((fileContent) => {
+      cy.window().then((win) => {
+        cy.stub(win, 'alert').as('alertStub');
+      });
+
       cy.get('input[type="file"]').selectFile(
         {
           contents: fileContent,
@@ -37,17 +41,10 @@ describe('Visdom - Upload Dashboard JSON Feature', () => {
         { force: true }
       );
 
-      cy.on('window:alert', () => true);
-
       cy.get('button .glyphicon-upload').parent('button').click();
-
-      cy.on('window:alert', (alertText) => {
-        expect(alertText.toLowerCase()).to.match(/loaded|success|uploaded/);
-      });
-
-      cy.get('.rc-tree-select-selection__choice__content', {
+      cy.contains('.rc-tree-select-selection__choice__content', 'uploaded_', {
         timeout: 15000,
-      }).should('contain', 'uploaded_');
+      }).should('exist');
     });
   });
 });

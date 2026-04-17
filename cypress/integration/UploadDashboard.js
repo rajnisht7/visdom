@@ -28,7 +28,7 @@ describe('Visdom - Upload Dashboard JSON Feature', () => {
     });
   });
 
-  it('should successfully upload valid dashboard JSON', () => {
+  it('should successfully upload valid dashboard JSON and switch to new environment', () => {
     cy.fixture('test.json').then((fileContent) => {
       cy.get('input[type="file"]').selectFile(
         {
@@ -39,16 +39,17 @@ describe('Visdom - Upload Dashboard JSON Feature', () => {
         { force: true }
       );
 
+      cy.on('window:alert', () => true);
+
       cy.get('button .glyphicon-upload').parent('button').click();
 
       cy.on('window:alert', (alertText) => {
         expect(alertText.toLowerCase()).to.match(/loaded|success|uploaded/);
       });
+
+      cy.get('.rc-tree-select-selection__choice__content', {
+        timeout: 15000,
+      }).should('contain', 'uploaded_');
     });
-  });
-  it('should automatically switch to the newly uploaded environment after upload', () => {
-    cy.get('.rc-tree-select-selection__choice__content', {
-      timeout: 15000,
-    }).should('contain', 'uploaded_');
   });
 });

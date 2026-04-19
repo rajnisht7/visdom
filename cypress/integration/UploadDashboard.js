@@ -31,7 +31,7 @@ describe('Visdom - Upload Dashboard JSON Feature', () => {
       req.continue((res) => {
         res.delay = 1000;
       });
-    }).as('uploadEnv');
+    }).as('uploadRequest');
 
     cy.window().then((win) => {
       cy.stub(win, 'alert').as('alertStub');
@@ -48,13 +48,13 @@ describe('Visdom - Upload Dashboard JSON Feature', () => {
       );
 
       cy.get('button .glyphicon-upload').parent('button').click();
-
-      cy.wait('@uploadEnv');
+      cy.wait('@uploadRequest');
       cy.get('@alertStub', { timeout: 15000 }).should('have.been.called');
-
-      cy.contains('.rc-tree-select-selection__choice__content', 'uploaded_', {
-        timeout: 15000,
-      }).should('exist');
+      cy.window().then((win) => {
+        const envIDs = JSON.parse(win.localStorage.getItem('envIDs'));
+        expect(envIDs).to.be.an('array');
+        expect(envIDs[0]).to.match(/^uploaded_/);
+      });
     });
   });
 });

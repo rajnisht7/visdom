@@ -2181,12 +2181,11 @@ class Visdom(object):
             assert (
                 isinstance(opts["normalize"], numbers.Number) and opts["normalize"] > 0
             ), "opts.normalize should be positive number"
-            magnitude = np.sqrt(np.add(np.multiply(X, X), np.multiply(Y, Y)))
-            max_magnitude=magnitude.max()
-            if not np.isfinite(max_magnitude) or max_magnitude <= 0:
+            magnitude = np.sqrt(np.add(np.multiply(X, X), np.multiply(Y, Y))).max()
+            if not np.isfinite(magnitude) or magnitude <= 0:
                 warnings.warn("Skipping normalization due to invalid magnitude")
             else:
-                scale = max_magnitude / opts["normalize"]
+                scale = magnitude / opts["normalize"]
                 X = X / scale
                 Y = Y / scale
 

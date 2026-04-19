@@ -2184,15 +2184,15 @@ class Visdom(object):
                 and np.isfinite(opts["normalize"])
             ), "opts.normalize should be a finite positive number"
             magnitude = np.sqrt(np.add(np.multiply(X, X), np.multiply(Y, Y)))
-            finite_mag = magnitude[np.isfinite(magnitude)]
+            finite_mask = np.isfinite(magnitude)
 
-            if finite_mag.size == 0:
+            if not np.any(finite_mask):
                 warnings.warn(
                     "Skipping quiver normalization: all magnitudes are non-finite (NaN or Inf)",
                     RuntimeWarning,
                 )
             else:
-                max_mag = finite_mag.max()
+                max_mag = magnitude[finite_mask].max()
 
                 if max_mag <= 0:
                     warnings.warn(
@@ -2201,12 +2201,15 @@ class Visdom(object):
                     )
                 else:
                     scale = max_mag / opts["normalize"]
+
                     if scale <= 0 or not np.isfinite(scale):
                         warnings.warn(
                             "Skipping quiver normalization: invalid scale computed",
                             RuntimeWarning,
                         )
                     else:
+                        X = np.where(np.isfinite(X), X, np.nan)
+                        Y = np.where(np.isfinite(Y), Y, np.nan)
                         X = X / scale
                         Y = Y / scale
 

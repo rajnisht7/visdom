@@ -2179,18 +2179,21 @@ class Visdom(object):
         # normalize vectors to unit length:
         if opts.get("normalize", False):
             assert (
-                isinstance(opts["normalize"], numbers.Number) and opts["normalize"] > 0
-            ), "opts.normalize should be positive number"
+                isinstance(opts["normalize"], numbers.Number)
+                and opts["normalize"] > 0
+                and np.isfinite(opts["normalize"])
+            ), "opts.normalize should be a finite positive number"
             magnitude = np.sqrt(np.add(np.multiply(X, X), np.multiply(Y, Y)))
             finite_mag = magnitude[np.isfinite(magnitude)]
 
             if finite_mag.size == 0:
                 warnings.warn(
-                    "Skipping quiver normalization: all magnitudes are non-finite (NaN/Inf)",
+                    "Skipping quiver normalization: all magnitudes are non-finite (NaN or Inf)",
                     RuntimeWarning,
                 )
             else:
                 max_mag = finite_mag.max()
+
                 if max_mag <= 0:
                     warnings.warn(
                         "Skipping quiver normalization: max magnitude is zero",
@@ -2198,8 +2201,14 @@ class Visdom(object):
                     )
                 else:
                     scale = max_mag / opts["normalize"]
-                    X = X / scale
-                    Y = Y / scale
+                    if scale <= 0 or not np.isfinite(scale):
+                        warnings.warn(
+                            "Skipping quiver normalization: invalid scale computed",
+                            RuntimeWarning,
+                        )
+                    else:
+                        X = X / scale
+                        Y = Y / scale
 
         # interleave X and Y with copies / NaNs to get lines:
         nans = np.full((X.shape[0], X.shape[1]), np.nan).flatten()

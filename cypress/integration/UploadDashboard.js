@@ -27,6 +27,8 @@ describe('Visdom - Upload Dashboard JSON Feature', () => {
   });
 
   it('should successfully upload valid dashboard JSON and switch to new environment', () => {
+    cy.intercept('POST', '**/upload_env').as('uploadEnv');
+
     cy.window().then((win) => {
       cy.stub(win, 'alert').as('alertStub');
     });
@@ -41,8 +43,12 @@ describe('Visdom - Upload Dashboard JSON Feature', () => {
         { force: true }
       );
 
-      cy.get('button .glyphicon-upload').parent('button').click();
+      cy.wait('@uploadEnv', { timeout: 15000 })
+        .its('response.statusCode')
+        .should('eq', 200);
+
       cy.get('@alertStub', { timeout: 15000 }).should('have.been.called');
+
       cy.contains('.rc-tree-select-selection__choice__content', 'uploaded_', {
         timeout: 15000,
       }).should('exist');

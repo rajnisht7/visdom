@@ -28,7 +28,8 @@ RUN python -c "from visdom.server.build import download_scripts; download_script
 RUN groupadd --system visdom \
     && useradd --system --gid visdom --create-home --home-dir /home/visdom visdom \
     && mkdir -p /home/visdom/.visdom \
-    && chown -R visdom:visdom /app /home/visdom
+    && VISDOM_PKG_DIR="$(python -c 'import os, visdom; print(os.path.dirname(visdom.__file__))')" \
+    && chown -R visdom:visdom /app /home/visdom "$VISDOM_PKG_DIR"
 
 USER visdom
 

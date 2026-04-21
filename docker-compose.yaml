@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  visdom:
+    build: .
+    image: fossasia/visdom:latest
+    ports:
+      - "8097:8097"
+    volumes:
+      - visdom_data:/root/.visdom
+    environment:
+      - VISDOM_USERNAME=${VISDOM_USERNAME:-}
+      - VISDOM_PASSWORD=${VISDOM_PASSWORD:-}
+      - VISDOM_USE_ENV_CREDENTIALS=${VISDOM_USE_ENV_CREDENTIALS:-0}
+    restart: unless-stopped
+
+volumes:
+  visdom_data:

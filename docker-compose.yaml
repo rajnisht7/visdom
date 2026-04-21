@@ -12,6 +12,7 @@ services:
       - VISDOM_USERNAME=${VISDOM_USERNAME:-}
       - VISDOM_PASSWORD=${VISDOM_PASSWORD:-}
       - VISDOM_USE_ENV_CREDENTIALS=${VISDOM_USE_ENV_CREDENTIALS:-0}
+      - VISDOM_COOKIE=${VISDOM_COOKIE:-}
     restart: unless-stopped
 
 volumes:

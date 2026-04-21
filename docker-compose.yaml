@@ -14,7 +14,7 @@ services:
       - VISDOM_COOKIE=${VISDOM_COOKIE:-}
     restart: unless-stopped
     # To enable authentication uncomment line below
-    # # and set env variables in a .env file
+    # and set env variables in a .env file
     # command: ["-enable_login"]
 
 volumes:

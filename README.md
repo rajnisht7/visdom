@@ -7,7 +7,7 @@
 </h3>
 
 
-<p align="center"> Jump To: <a href="#setup">Setup</a>, <a href="#usage">Usage</a>, <a href="#api">API</a>, <a href="#customizing-visdom">Customizing</a>, <a href="#contributing">Contributing</a>, <a href="#license">License</a>
+<p align="center"> Jump To: <a href="#setup">Setup</a>, <a href="#docker">Docker</a>, <a href="#usage">Usage</a>, <a href="#api">API</a>, <a href="#customizing-visdom">Customizing</a>, <a href="#contributing">Contributing</a>, <a href="#license">License</a>
 </p>
 
 
@@ -181,6 +181,62 @@ Install from source
 ```bash
 > pip install git+https://github.com/fossasia/visdom
 ```
+
+
+## Docker
+
+Visdom can be run as docker container, providing an isolated environment without requiring any local setup.
+
+#### Prerequisites
+
+Make Sure that Docker is installed in the system
+```
+docker --version
+docker compose version
+```
+ #### Building the image
+ Clone the repository and build the image using `docker build -t fossasia/visdom:latest .`
+ 
+#### Running the container
+
+- Normal mode (without authentication)
+    `docker run -d --name visdom -p 8097:8097 fossasia/visdom:latest`
+- Custom Port (e.g. 9000 on host)
+    `docker run -d --name visdom -p 9000:8097 fossasia/visdom:latest`
+- Read-only mode
+    `docker run -d --name visdom -p 8097:8097 fossasia/visdom:latest -readonly`
+- With Authetication (-enable_login)
+  ```
+  docker run -d --name visdom \
+  -p 8097:8097 \
+  -e VISDOM_USERNAME=myuser \
+  -e VISDOM_PASSWORD=mypassword \
+  -e VISDOM_USE_ENV_CREDENTIALS=1 \
+  -e VISDOM_COOKIE=mysecretcookievalue \
+  fossasia/visdom:latest -enable_login
+  ```
+- With Authentication (using .env file)
+  create .env file with credentials as
+  ```
+  VISDOM_USERNAME=myuser
+  VISDOM_PASSWORD=mypassword
+  VISDOM_USE_ENV_CREDENTIALS=1
+  VISDOM_COOKIE=mysecretcookievalue
+  ```
+  then run
+  ```
+  docker run -d --name visdom \
+  -p 8097:8097 \
+  --env-file .env \
+  fossasia/visdom:latest -enable_login
+  ```
+- Rebuilding after code changes
+  ```
+  docker stop visdom && docker rm visdom
+  docker build -t fossasia/visdom:latest .
+  docker run -d --name visdom -p 8097:8097 fossasia/visdom:latest
+  ```
+
 
 ## Usage
 

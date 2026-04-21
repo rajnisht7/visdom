@@ -18,7 +18,7 @@ COPY --from=js-builder /app /app
 
 RUN pip install --no-cache-dir wheel "setuptools<80"
 
-RUN pip install --no-cache-dir -e .
+RUN pip install --no-cache-dir .
 
 VOLUME ["/root/.visdom"]
 

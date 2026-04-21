@@ -3,7 +3,7 @@ version: "3.8"
 services:
   visdom:
     build: .
-    image: fossasia/visdom:latest
+    image: fossasia/visdom:local
     ports:
       - "8097:8097"
     volumes:

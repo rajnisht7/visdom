@@ -117,7 +117,7 @@ const ApiProvider = ({ children }) => {
       case 'window_update':
         apiHandlers.current.onWindowMessage({
           cmd: cmd,
-          update: cmd.commmand === 'window_update',
+          update: cmd.command === 'window_update',
         });
         break;
       case 'reload':

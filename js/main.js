@@ -259,6 +259,8 @@ const App = () => {
         cmd.version == _pendingPanesVersions.current[cmd.win] + 1)
     ) {
       addPaneBatched(cmd);
+    } else {
+      sendEnvQuery(selection.envIDs);
     }
   };
 

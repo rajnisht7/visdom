@@ -12,7 +12,7 @@ const ApiProvider = ({ children }) => {
 
   // ---------------- //
   // helper functions //
-  // ---------------- // 
+  // ---------------- //
 
   // Normalize window.location by removing specific path segments
   // and ensuring the pathname ends with a '/'
@@ -57,7 +57,6 @@ const ApiProvider = ({ children }) => {
       if (apiHandlers.current?.onDisconnect) {
         apiHandlers.current.onDisconnect(_socket);
       }
-      // _socket.current = null;
       setConnected(false);
     };
 

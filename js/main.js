@@ -111,6 +111,7 @@ const App = () => {
   const _timeoutID = useRef(null);
   const _pendingPanes = useRef([]);
   const _pendingPanesVersions = useRef({});
+  const _envReloadInFlight = useRef(false);
 
   // --------------------- //
   // grid helper functions //
@@ -259,7 +260,8 @@ const App = () => {
         cmd.version == _pendingPanesVersions.current[cmd.win] + 1)
     ) {
       addPaneBatched(cmd);
-    } else {
+    } else if (!_envReloadInFlight.current){
+      _envReloadInFlight.current = true;
       sendEnvQuery(selection.envIDs);
     }
   };
@@ -268,6 +270,7 @@ const App = () => {
     // If we're in compare mode and recieve an update to an environment
     // that is selected that isn't from the compare output, we need to
     // reload the compare output
+    _envReloadInFlight.current = false;
     if (selection.envIDs.length > 1 && cmd.has_compare !== true) {
       sendEnvQuery(selection.envIDs);
     } else if (update) {

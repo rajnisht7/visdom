@@ -270,12 +270,12 @@ const App = () => {
     // If we're in compare mode and recieve an update to an environment
     // that is selected that isn't from the compare output, we need to
     // reload the compare output
-    _envReloadInFlight.current = false;
     if (selection.envIDs.length > 1 && cmd.has_compare !== true) {
       sendEnvQuery(selection.envIDs);
     } else if (update) {
       updateWindow(cmd);
     } else {
+      _envReloadInFlight.current = false;
       addPaneBatched(cmd);
     }
   };

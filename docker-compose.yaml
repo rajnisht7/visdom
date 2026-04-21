@@ -6,7 +6,7 @@ services:
     ports:
       - "8097:8097"
     volumes:
-      - visdom_data:/home/visdom/.visdom  
+      - visdom_data:/home/visdom/.visdom
     environment:
       - VISDOM_USERNAME=${VISDOM_USERNAME:-}
       - VISDOM_PASSWORD=${VISDOM_PASSWORD:-}

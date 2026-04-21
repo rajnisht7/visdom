@@ -237,6 +237,30 @@ docker compose version
   docker run -d --name visdom -p 8097:8097 fossasia/visdom:latest
   ```
 
+  ### Using Docker Compose
+  
+  `docker-compose.yml` is provided for convenience.
+
+  - Start in normal mode
+    `docker compose up -d`
+  - Start with authentication
+    create .env file with:
+    ```
+    VISDOM_USERNAME=myuser
+    VISDOM_PASSWORD=mypassword
+    VISDOM_USE_ENV_CREDENTIALS=1
+    VISDOM_COOKIE=mysecretcookie
+    ```
+    and uncomment the `command` line in `docker-compose.yml`
+    then
+    `docker compose up -d`
+  - Custom port (e.g. 9000)
+    ```
+    ports:
+      -  "9000:8097"
+    ```
+    then
+    `docker compose up -d`
 
 ## Usage
 

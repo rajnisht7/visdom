@@ -13,8 +13,9 @@ services:
       - VISDOM_USE_ENV_CREDENTIALS=${VISDOM_USE_ENV_CREDENTIALS:-}
       - VISDOM_COOKIE=${VISDOM_COOKIE:-}
     restart: unless-stopped
-    # To enable authentication use flag -enable_login
-    # e.g. docker run -d -p 8097:8097 --env-file .env fossasia/visdom:latest -enable_login
+    # To enable authentication uncomment line below
+    # # and set env variables in a .env file
+    # command: ["-enable_login"]
 
 volumes:
   visdom_data:

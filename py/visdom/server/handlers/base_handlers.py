@@ -81,6 +81,7 @@ class BaseHandler(tornado.web.RequestHandler):
                 }
                 self.render("error.html", **params)
                 logging.error("rendering complete")
+                return
             except Exception as e:
                 logging.error(e)
             error_msg = (

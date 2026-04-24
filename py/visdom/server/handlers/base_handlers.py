@@ -83,7 +83,9 @@ class BaseHandler(tornado.web.RequestHandler):
                 logging.error("rendering complete")
             except Exception as e:
                 logging.error(e)
-            error_msg = str(exc_info[1]) if exc_info and exc_info[1] else 'Unknown server error'
+            error_msg = (
+                str(exc_info[1]) if exc_info and exc_info[1] else "Unknown server error"
+            )
             self.set_status(status_code)
             self.write(
                 f"""

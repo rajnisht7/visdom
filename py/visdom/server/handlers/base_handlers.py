@@ -15,6 +15,7 @@ import traceback
 
 import tornado.web
 import tornado.websocket
+import http.client
 
 
 class BaseWebSocketHandler(tornado.websocket.WebSocketHandler):
@@ -75,9 +76,9 @@ class BaseHandler(tornado.web.RequestHandler):
                     "error": exc_info[1],
                     "trace_info": traceback.format_exception(*exc_info),
                     "request": self.request.__dict__,
+                    "title": http.client.responses.get(status_code, "Unknown Error"), 
                 }
 
-                # TODO make an error.html page
                 self.render("error.html", **params)
                 logging.error("rendering complete")
             except Exception as e:

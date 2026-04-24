@@ -12,10 +12,10 @@ Contain the basic web request handlers that all other handlers derive from
 
 import logging
 import traceback
+import http.client
 
 import tornado.web
 import tornado.websocket
-import http.client
 
 
 class BaseWebSocketHandler(tornado.websocket.WebSocketHandler):
@@ -76,6 +76,7 @@ class BaseHandler(tornado.web.RequestHandler):
                     "error": exc_info[1],
                     "trace_info": traceback.format_exception(*exc_info),
                     "request": self.request.__dict__,
+                    "status_code": status_code,
                     "title": http.client.responses.get(status_code, "Unknown Error"),
                 }
 

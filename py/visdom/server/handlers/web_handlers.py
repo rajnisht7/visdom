@@ -679,8 +679,12 @@ class UserSettingsHandler(BaseHandler):
 
 class ErrorHandler(BaseHandler):
     def get(self, text):
-        try:
-            status_code = int(text) if text and text.isdigit() else 500
-            raise tornado.web.HTTPError(status_code)
-        except ValueError:
-            raise tornado.web.HTTPError(400, reason="Invalid status code format")
+        if not text or not text.strip().isdigit():
+            raise tornado.web.HTTPError(400, reason="Invalid status code")
+
+        status_code = int(text.strip())
+
+        if not 400 <= status_code <= 599:
+            raise tornado.web.HTTPError(400, reason="Invalid status code")
+
+        raise tornado.web.HTTPError(status_code)

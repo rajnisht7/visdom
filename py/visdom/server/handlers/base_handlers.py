@@ -76,7 +76,7 @@ class BaseHandler(tornado.web.RequestHandler):
                     "error": exc_info[1],
                     "trace_info": traceback.format_exception(*exc_info),
                     "request": self.request.__dict__,
-                    "title": http.client.responses.get(status_code, "Unknown Error"), 
+                    "title": http.client.responses.get(status_code, "Unknown Error"),
                 }
 
                 self.render("error.html", **params)

@@ -64,7 +64,7 @@ class BaseHandler(tornado.web.RequestHandler):
             logging.info(
                 "Traceback: {}".format(traceback.format_exception(*kwargs["exc_info"]))
             )
-        if self.settings.get("debug") and "exc_info" in kwargs:
+            title = http.client.responses.get(status_code, "Unknown Error")
             logging.error("rendering error page")
             exc_info = kwargs["exc_info"]
             # exc_info is a tuple consisting of:
@@ -77,10 +77,14 @@ class BaseHandler(tornado.web.RequestHandler):
                     "trace_info": traceback.format_exception(*exc_info),
                     "request": self.request.__dict__,
                     "status_code": status_code,
-                    "title": http.client.responses.get(status_code, "Unknown Error"),
+                    "title": title,
                 }
-
                 self.render("error.html", **params)
                 logging.error("rendering complete")
             except Exception as e:
                 logging.error(e)
+            self.set_status(status_code)
+            self.write(f"""
+            <h1>{status_code} - {title}</h1>
+            <p><strong>Error:</strong> {exc_info[1] if exc_info else 'Unknown server error'}</p>
+            """)

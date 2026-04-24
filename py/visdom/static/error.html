@@ -41,11 +41,6 @@
     <div class="header-title">
       <span class="status-badge">{{ status_code }}</span>
       {{title}}
-      {% if error is not None %}
-        <span class="debug-badge">debug mode</span>
-      {% else %}
-        <span class="prod-badge">production</span>
-      {% end %}
     </div>
     <div class="header-sub">An unhandled exception occurred</div>
   </div>

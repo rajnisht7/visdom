@@ -2,7 +2,7 @@ import numpy as np
 
 
 def plot_violin_basic(viz, env, args):
-    rng = np.random.default_rng(42)
+    rng = np.random.RandomState(42)
     X = rng.normal(loc=0.0, scale=1.0, size=200)
     viz.violin(
         X=X,
@@ -17,7 +17,7 @@ def plot_violin_basic(viz, env, args):
 
 
 def plot_violin_multigroup(viz, env, args):
-    rng = np.random.default_rng(0)
+    rng = np.random.RandomState(0)
     X = np.column_stack(
         [
             rng.normal(loc=0.78, scale=0.06, size=300),
@@ -40,7 +40,7 @@ def plot_violin_multigroup(viz, env, args):
 
 
 def plot_violin_with_points(viz, env, args):
-    rng = np.random.default_rng(7)
+    rng = np.random.RandomState(7)
     X = np.column_stack(
         [
             rng.exponential(scale=1.8, size=200) + 1.0,
@@ -64,7 +64,7 @@ def plot_violin_with_points(viz, env, args):
 
 
 def plot_violin_horizontal(viz, env, args):
-    rng = np.random.default_rng(99)
+    rng = np.random.RandomState(99)
     X = np.column_stack(
         [
             rng.normal(loc=0.0, scale=1.00, size=400),

@@ -112,9 +112,9 @@ class Visdom:
         Y: Optional[Tensor] = ...,
         win: _OptStr = ...,
         env: _OptStr = ...,
+        opts: _OptOps = ...,
         update: _OptStr = ...,
         name: _OptStr = ...,
-        opts: _OptOps = ...,
     ) -> _SendReturn: ...
     def line(
         self,

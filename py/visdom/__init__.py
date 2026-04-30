@@ -2676,9 +2676,10 @@ class Visdom(object):
                 "box": {"visible": showbox},
                 "meanline": {"visible": showmeanline},
                 "points": points,
-                "jitter": jitter,
                 "side": side,
             }
+            if jitter is not None:
+                trace["jitter"] = jitter
 
             if orientation == "v":
                 trace["y"] = col_data

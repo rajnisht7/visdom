@@ -2,13 +2,12 @@ import numpy as np
 
 
 def plot_violin_basic(viz, env, args):
-    rng = np.random.RandomState(42)
-    X = rng.normal(loc=0.0, scale=1.0, size=200)
+    X = np.random.randn(200)
     viz.violin(
         X=X,
         env=env,
         opts=dict(
-            title="Violin - Basic",
+            title="Violin Basic",
             legend=["distribution"],
             showbox=True,
             showmeanline=True,
@@ -17,13 +16,12 @@ def plot_violin_basic(viz, env, args):
 
 
 def plot_violin_multigroup(viz, env, args):
-    rng = np.random.RandomState(0)
     X = np.column_stack(
         [
-            rng.normal(loc=0.78, scale=0.06, size=300),
-            rng.normal(loc=0.83, scale=0.03, size=300),
-            rng.normal(loc=0.85, scale=0.02, size=300),
-            rng.normal(loc=0.81, scale=0.05, size=300),
+            np.random.normal(loc=0.78, scale=0.06, size=300),
+            np.random.normal(loc=0.83, scale=0.03, size=300),
+            np.random.normal(loc=0.85, scale=0.02, size=300),
+            np.random.normal(loc=0.81, scale=0.05, size=300),
         ]
     )
     viz.violin(
@@ -40,13 +38,12 @@ def plot_violin_multigroup(viz, env, args):
 
 
 def plot_violin_with_points(viz, env, args):
-    rng = np.random.RandomState(7)
     X = np.column_stack(
         [
-            rng.exponential(scale=1.8, size=200) + 1.0,
-            rng.exponential(scale=1.0, size=200) + 0.5,
-            rng.exponential(scale=0.5, size=200) + 0.2,
-            rng.exponential(scale=0.25, size=200) + 0.1,
+            np.random.exponential(scale=1.8, size=200) + 1.0,
+            np.random.exponential(scale=1.0, size=200) + 0.5,
+            np.random.exponential(scale=0.5, size=200) + 0.2,
+            np.random.exponential(scale=0.25, size=200) + 0.1,
         ]
     )
     viz.violin(
@@ -64,14 +61,13 @@ def plot_violin_with_points(viz, env, args):
 
 
 def plot_violin_horizontal(viz, env, args):
-    rng = np.random.RandomState(99)
     X = np.column_stack(
         [
-            rng.normal(loc=0.0, scale=1.00, size=400),
-            rng.normal(loc=0.0, scale=0.50, size=400),
-            rng.normal(loc=0.0, scale=0.15, size=400),
-            rng.normal(loc=0.0, scale=0.03, size=400),
-            rng.normal(loc=0.0, scale=0.01, size=400),
+            np.random.normal(loc=0.0, scale=1.00, size=400),
+            np.random.normal(loc=0.0, scale=0.50, size=400),
+            np.random.normal(loc=0.0, scale=0.15, size=400),
+            np.random.normal(loc=0.0, scale=0.03, size=400),
+            np.random.normal(loc=0.0, scale=0.01, size=400),
         ]
     )
     viz.violin(

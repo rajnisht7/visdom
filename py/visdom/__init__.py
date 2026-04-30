@@ -2703,4 +2703,3 @@ class Visdom(object):
                 "opts": opts,
             }
         )
-

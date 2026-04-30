@@ -53,7 +53,7 @@ def plot_violin_with_points(viz, env, args):
         X=X,
         env=env,
         opts=dict(
-            title="Raining Loss per Epoch",
+            title="Training Loss per Epoch",
             legend=["epoch 1", "epoch 5", "epoch 10", "epoch 20"],
             showbox=True,
             showmeanline=True,

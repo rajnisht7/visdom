@@ -4,7 +4,7 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
-from typing import Optional, List, Any, Union, Mapping, overload, Text
+from typing import Optional, List, Any, Union, Mapping, Text
 
 ### Type aliases for commonly-used types.
 # For optional 'options' parameters.
@@ -61,17 +61,9 @@ class Visdom:
         opts: _OptOps = ...,
         append: bool = ...,
     ) -> _SendReturn: ...
-    @overload
     def svg(
         self,
         svgstr: _OptStr = ...,
-        win: _OptStr = ...,
-        env: _OptStr = ...,
-        opts: _OptOps = ...,
-    ) -> _SendReturn: ...
-    @overload
-    def svg(
-        self,
         svgfile: _OptStr = ...,
         win: _OptStr = ...,
         env: _OptStr = ...,

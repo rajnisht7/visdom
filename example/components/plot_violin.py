@@ -78,7 +78,7 @@ def plot_violin_horizontal(viz, env, args):
         X=X,
         env=env,
         opts=dict(
-            title="Violin Layer Activations ",
+            title="Violin Layer Activations",
             legend=["layer_1", "layer_2", "layer_3", "layer_4", "layer_5"],
             orientation="h",
             showbox=True,

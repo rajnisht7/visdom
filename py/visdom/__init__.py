@@ -2605,7 +2605,7 @@ class Visdom(object):
         - `opts.legend` : labels for each of the columns in `X`
         - `opts.showbox` : overlay a mini box plot inside the violin
                                   (`bool` and default = `True`)
-        - `opts.showmeanline` : overlay the mean line (`bool`and default = `True`)
+        - `opts.showmeanline` : overlay the mean line (`bool` and default = `True`)
         - `opts.points` : which raw points to show alongside the violin
                                   One of `all`, `outliers`,
                                   `suspectedoutliers`, or `False`

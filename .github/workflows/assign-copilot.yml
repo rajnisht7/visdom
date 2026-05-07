@@ -1,0 +1,44 @@
+name: auto assign copilot reviewer
+
+on:
+  pull_request:
+    types: [opened, ready_for_review]   # Draft se ready hone pe bhi assign ho
+
+permissions:
+  pull-requests: write
+
+jobs:
+  assign-copilot:
+    runs-on: ubuntu-latest
+    # not on draft PR only on ready PRs
+    if: github.event.pull_request.draft == false
+
+    steps:
+      - name: Request Copilot review
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr     = context.payload.pull_request;
+            const owner  = context.repo.owner;
+            const repo   = context.repo.repo;
+            const prNum  = pr.number;
+            const author = pr.user.login;
+
+            // if author is copilo
+            if (author === 'Copilot') {
+              core.info('PR author Copilot hai — skipping.');
+              return;
+            }
+
+            try {
+              await github.rest.pulls.requestReviewers({
+                owner,
+                repo,
+                pull_number: prNum,
+                reviewers: ['Copilot'],
+              });
+              core.info(`Copilot assigned as reviewer on PR #${prNum}`);
+            } catch (e) {
+              core.warning(`Copilot assign nahi ho saka: ${e.message}`);
+            }

@@ -18,6 +18,7 @@ jobs:
           script: |
             const body = context.payload.pull_request.body || '';
             const pr = context.payload.pull_request.number;
+            const BOT_MARKER = '<!-- pr-quality-check -->';
 
             const sections = [
               { heading: '## Description', min: 20 },
@@ -77,12 +78,27 @@ jobs:
               return;
             }
 
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo:  context.repo.repo,
+              issue_number: pr,
+            });
+            const prev = comments.find(c => c.body.includes(BOT_MARKER));
+            if (prev) {
+              await github.rest.issues.deleteComment({
+                owner: context.repo.owner,
+                repo:  context.repo.repo,
+                comment_id: prev.id,
+              });
+            }
+
+
 
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo:  context.repo.repo,
               issue_number: pr,
-              body: `**Please fix these sections before this PR can be reviewed:**\n\n${errors.join('\n')}\n\n`,
+              body: `${BOT_MARKER}\n**Please fix these sections before this PR can be reviewed:**\n\n${errors.join('\n')}\n\n`,
             });
 
             try {

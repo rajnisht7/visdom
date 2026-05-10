@@ -58,6 +58,7 @@ jobs:
             ];
             for (const heading of checkboxSections) {
               const content = getSections(body, heading);
+              const name = heading.replace('## ', '');
               if (!content) {
                 errors.push(`- **${name}** is empty.`);
               } else if ((content.match(/- \[x\]/gi) || []).length === 0) {

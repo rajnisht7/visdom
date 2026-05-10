@@ -49,6 +49,17 @@ jobs:
                 errors.push(`- **${name}** is too short (${content.length}/${min} chars minimum).`);
               }
             }
+            
+            const checkboxSections = [
+              '## Types of changes',
+              '## Checklist',
+            ];
+            for (const heading of checkboxSections) {
+              const content = extract(body, heading);
+              if (content !== null && (content.match(/- \[x\]/gi) || []).length === 0) {
+                errors.push(`- **${heading.replace('## ', '')}** — please tick at least one checkbox.`);
+              }
+            }
 
             if (errors.length === 0) {
               core.info('All sections look good!');

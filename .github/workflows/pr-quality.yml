@@ -19,8 +19,8 @@ jobs:
             const pr   = context.payload.pull_request.number;
 
             const SECTIONS = [
-              { heading: '## Description',             min: 20 },
-              { heading: '## Motivation and Context',  min: 20 },
+              { heading: '## Description', min: 20 },
+              { heading: '## Motivation and Context', min: 20 },
               { heading: '## How Has This Been Tested?', min: 30 },
             ];
 

@@ -70,7 +70,7 @@ jobs:
                 labels: ['blocked'],
               });
             } catch (e) {
-              if (e.status === 422) {
+              if (e.status === 404) {
                 await github.rest.issues.createLabel({
                   owner: context.repo.owner,
                   repo:  context.repo.repo,

@@ -29,7 +29,7 @@ jobs:
               const idx = text.indexOf(heading);
               if (idx === -1) return null;
               const after = text.slice(idx + heading.length);
-              const end   = after.match(/\n##\s/);
+              const end = after.match(/\n##\s/);
               return after
                 .slice(0, end ? end.index : undefined)
                 .replace(/<!--[\s\S]*?-->/g, '')

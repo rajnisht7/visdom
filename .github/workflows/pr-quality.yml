@@ -54,12 +54,14 @@ jobs:
 
             const checkboxSections = [
               '## Types of changes',
-              '## Checklist',
+              '## Checklist:',
             ];
             for (const heading of checkboxSections) {
               const content = getSections(body, heading);
-              if (content !== null && (content.match(/- \[x\]/gi) || []).length === 0) {
-                errors.push(`- **${heading.replace('## ', '')}** — please tick at least one checkbox.`);
+              if (!content) {
+                errors.push(`- **${name}** is empty.`);
+              } else if ((content.match(/- \[x\]/gi) || []).length === 0) {
+                errors.push(`- **${name}** — please tick at least one checkbox.`);
               }
             }
 

@@ -1,7 +1,7 @@
 name: PR Quality Check
 
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, edited, reopened]
 
 permissions:
@@ -63,9 +63,20 @@ jobs:
             }
 
             if (errors.length === 0) {
+              try {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo:  context.repo.repo,
+                  issue_number: pr,
+                  name: 'blocked',
+                });
+              } catch (e) {
+                if (e.status !== 404) throw e;
+              }
               core.info('All sections look good!');
               return;
             }
+
 
             await github.rest.issues.createComment({
               owner: context.repo.owner,

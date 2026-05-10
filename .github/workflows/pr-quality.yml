@@ -16,22 +16,22 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const body = context.payload.pull_request.body || '';
-            const pr   = context.payload.pull_request.number;
+            const pr = context.payload.pull_request.number;
 
-            const SECTIONS = [
+            const sections = [
               { heading: '## Description', min: 20 },
               { heading: '## Motivation and Context', min: 20 },
               { heading: '## How Has This Been Tested?', min: 30 },
             ];
 
 
-            function extract(text, heading) {
+            function getSections(text, heading) {
               const idx = text.indexOf(heading);
               if (idx === -1) return null;
               const after = text.slice(idx + heading.length);
-              const end = after.match(/\n##\s/);
+              const nextSection = after.match(/\n##\s/);
               return after
-                .slice(0, end ? end.index : undefined)
+                .slice(0, nextSection ? nextSection.index : undefined)
                 .replace(/<!--[\s\S]*?-->/g, '')
                 .replace(/\s+/g, ' ')
                 .trim();
@@ -39,8 +39,8 @@ jobs:
 
             const errors = [];
 
-            for (const { heading, min } of SECTIONS) {
-              const content = extract(body, heading);
+            for (const { heading, min } of sections) {
+              const content = getSections(body, heading);
               const name = heading.replace('## ', '');
 
               if (!content) {
@@ -55,7 +55,7 @@ jobs:
               '## Checklist',
             ];
             for (const heading of checkboxSections) {
-              const content = extract(body, heading);
+              const content = getSections(body, heading);
               if (content !== null && (content.match(/- \[x\]/gi) || []).length === 0) {
                 errors.push(`- **${heading.replace('## ', '')}** — please tick at least one checkbox.`);
               }

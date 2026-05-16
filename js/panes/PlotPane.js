@@ -39,9 +39,10 @@ var PlotPane = (props) => {
   };
 
   const handleMetadataExport = () => {
+    const graph = plotlyRef.current;
     const metadata = {
-      data: content?.data ?? [],
-      layout: content?.layout ?? {},
+      data: graph?.data ?? content?.data ?? [],
+      layout: graph?.layout ?? content?.layout ?? {},
     };
     const json = JSON.stringify(metadata, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
@@ -50,7 +51,7 @@ var PlotPane = (props) => {
     link.href = url;
     link.download = `${contentID}_metadata.json`;
     link.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 0);
   };
 
   // events

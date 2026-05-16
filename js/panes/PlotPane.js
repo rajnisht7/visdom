@@ -38,6 +38,21 @@ var PlotPane = (props) => {
     });
   };
 
+  const handleMetadataExport = () => {
+    const metadata = {
+      data: content?.data ?? [],
+      layout: content?.layout ?? {},
+    };
+    const json = JSON.stringify(metadata, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${contentID}_metadata.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   // events
   // ------
   useEffect(() => {
@@ -73,6 +88,12 @@ var PlotPane = (props) => {
 
     newPlot();
   });
+
+  useEffect(() => {
+    if (plotlyRef.current) {
+      Plotly.Plots.resize(plotlyRef.current);
+    }
+  }, [props.width, props.height]);
 
   // rendering
   // ---------
@@ -183,6 +204,7 @@ var PlotPane = (props) => {
     <Pane
       {...props}
       handleDownload={handleDownload}
+      handleMetadataExport={handleMetadataExport}
       barwidgets={[smooth_widget_button]}
       widgets={[smooth_widget]}
       enablePropertyList

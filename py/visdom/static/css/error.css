@@ -51,23 +51,6 @@ body {
   padding: 4px 10px;
 }
 
-.debug-badge {
-  font-size: 11px;
-  background: #1a3a1a;
-  color: #68d391;
-  border: 1px solid #276227;
-  border-radius: 4px;
-  padding: 2px 7px;
-}
-
-.prod-badge {
-  font-size: 11px;
-  background: #2d2d1a;
-  color: #d4b543;
-  border: 1px solid #5a5010;
-  border-radius: 4px;
-  padding: 2px 7px;
-}
 
 .card {
   background: #1a1f2e;
@@ -162,30 +145,4 @@ body {
   border-radius: 4px;
   font-size: 13px;
   color: #e2e8f0;
-}
-
-.footer {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.btn-back {
-  padding: 7px 14px;
-  background: #2d3748;
-  color: #e2e8f0;
-  border: 1px solid #4a5568;
-  border-radius: 6px;
-  font-size: 13px;
-  text-decoration: none;
-}
-
-.btn-back:hover {
-  background: #3d4a5c;
-}
-
-.footer-hint {
-  font-size: 12px;
-  color: #4a5568;
 }

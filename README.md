@@ -185,19 +185,29 @@ Install from source
 
 ## Docker
 
-Visdom can be run as docker container, providing an isolated environment without requiring any local setup.
+Visdom can be run as docker container, providing an isolated 
+environment without requiring any local setup.
 
 #### Prerequisites
 
-Make Sure that Docker is installed in the system
+Make Sure Docker is installed in the system
 ```
 docker --version
 docker compose version
 ```
  #### Building the image
  Clone the repository and build the image using `docker build -t fossasia/visdom:latest .`
+
+ #### Using docker compose
+ Start the bundled compose setup in detached mode:
+ ```
+ docker compose up -d
+ ```
+ To enable authentication with compose, set the same environment variables documented below (for example in a `.env` file used by compose) and 
+ add `-enable_login` to the Visdom service command in `docker-compose.yaml`.
+ Data created by Visdom persists in the volume or bind mount configured in `docker-compose.yaml`, so it remains available across container restarts.
  
-#### Running the container
+ #### Running the container
 
 - Normal mode (without authentication)
     `docker run -d --name visdom -p 8097:8097 fossasia/visdom:latest`
@@ -205,7 +215,7 @@ docker compose version
     `docker run -d --name visdom -p 9000:8097 fossasia/visdom:latest`
 - Read-only mode
     `docker run -d --name visdom -p 8097:8097 fossasia/visdom:latest -readonly`
-- With Authetication (-enable_login)
+- With Authentication (-enable_login)
   ```
   docker run -d --name visdom \
   -p 8097:8097 \

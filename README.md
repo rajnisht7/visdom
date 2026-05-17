@@ -240,7 +240,7 @@ docker compose version
 
   ### Using Docker Compose
   
-  `docker-compose.yml` is provided for convenience.
+  `docker-compose.yaml` is provided for convenience.
 
   - Start in normal mode
     `docker compose up -d`

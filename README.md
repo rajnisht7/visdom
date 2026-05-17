@@ -197,15 +197,6 @@ docker compose version
 ```
  #### Building the image
  Clone the repository and build the image using `docker build -t fossasia/visdom:latest .`
-
- #### Using docker compose
- Start the bundled compose setup in detached mode:
- ```
- docker compose up -d
- ```
- To enable authentication with compose, set the same environment variables documented below (for example in a `.env` file used by compose) and 
- add `-enable_login` to the Visdom service command in `docker-compose.yaml`.
- Data created by Visdom persists in the volume or bind mount configured in `docker-compose.yaml`, so it remains available across container restarts.
  
  #### Running the container
 
@@ -261,7 +252,7 @@ docker compose version
     VISDOM_USE_ENV_CREDENTIALS=1
     VISDOM_COOKIE=mysecretcookie
     ```
-    and uncomment the `command` line in `docker-compose.yml`
+    and uncomment the `command` line in `docker-compose.yaml`
     then
     `docker compose up -d`
   - Custom port (e.g. 9000)
@@ -271,6 +262,8 @@ docker compose version
     ```
     then
     `docker compose up -d`
+    
+    Data created by Visdom persists in the configured Docker volume across container restarts.
 
 ## Usage
 

@@ -29,7 +29,7 @@ function ViewControls(props) {
     if (!file) return;
 
     if (!file.name.toLowerCase().endsWith('.json')) {
-      alert('Upload Valid JSON file');
+      alert('Please upload a valid .json file.');
       e.target.value = '';
       return;
     }
@@ -64,9 +64,9 @@ function ViewControls(props) {
     } catch (err) {
       console.error('Upload error:', err);
       if (!navigator.onLine) {
-        alert('Network error: Internet connection Not available');
+        alert('Network error: no internet connection detected.');
       } else if (err.message.includes('Failed to fetch')) {
-        alert('Cannot connect to Visdom server.\nServer chal raha hai?');
+        alert('Cannot connect to the Visdom server.\nPlease check that the server is running.');
       } else {
         alert(`Upload failed:\n${err.message}`);
       }

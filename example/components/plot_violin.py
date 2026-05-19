@@ -2,13 +2,12 @@ import numpy as np
 
 
 def plot_violin_basic(viz, env, args):
-    title = args[0] if len(args) > 0 else None 
     X = np.random.randn(200)
     viz.violin(
         X=X,
         env=env,
         opts=dict(
-            title=title,
+            title="Violin Basic",
             legend=["distribution"],
             showbox=True,
             showmeanline=True,

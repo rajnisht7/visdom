@@ -75,7 +75,9 @@ class BaseHandler(tornado.web.RequestHandler):
             try:
                 params = {
                     "error": exc_info[1] if debug else None,
-                    "trace_info": traceback.format_exception(*exc_info) if debug else None,
+                    "trace_info": traceback.format_exception(*exc_info) 
+                    if debug 
+                    else None,
                     "request": self.request.__dict__ if debug else None,
                     "status_code": status_code,
                     "title": title,

@@ -250,7 +250,7 @@ class Application(tornado.web.Application):
 
         # initialize user style
         user_css = ""
-        home_style_path = os.path.join(config_dir, "style.css")
+        hhome_style_path = get_visdom_path("user/style.css")
         if os.path.exists(home_style_path):
             with open(home_style_path, "r") as f:
                 user_css += "\n" + f.read()

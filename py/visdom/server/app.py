@@ -246,7 +246,6 @@ class Application(tornado.web.Application):
             base_dir = os.path.expanduser("~/Library/Preferences")
         else:
             base_dir = os.getenv("XDG_CONFIG_HOME", os.path.expanduser("~/.config"))
-        config_dir = os.path.join(base_dir, "visdom")
 
         # initialize user style
         user_css = ""
@@ -259,7 +258,6 @@ class Application(tornado.web.Application):
             with open(project_style_path, "r") as f:
                 user_css += "\n" + f.read()
 
-        settings["config_dir"] = config_dir
         settings["user_css"] = user_css
 
         return settings

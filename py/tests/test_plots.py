@@ -10,7 +10,7 @@ class TestLine(unittest.TestCase):
 
     def _line(self, Y, X=None, **kwargs):
         sent = {}
- 
+
         def capture(msg, endpoint="events", **_):
             sent["payload"] = msg
             sent["endpoint"] = endpoint

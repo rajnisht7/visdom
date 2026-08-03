@@ -90,16 +90,22 @@ class LazyEnvData(Mapping):
         if self._raw_dict is not None:
             return
 
-        try:
-            env_data = self._store.load_env(self._eid)
-            raw = dict(env_data)
-            raw["jsons"] = env_data["jsons"]
-            raw["reload"] = env_data["reload"]
-            self._raw_dict = raw
-        except (KeyError, TypeError) as e:
-            raise ValueError(
-                "Failed loading environment json: {} - {}".format(self._eid, repr(e))
+        env_data = self._store.load_env(self._eid)
+        if (
+            not isinstance(env_data, dict)
+            or "jsons" not in env_data
+            or "reload" not in env_data
+        ):
+            logging.warning(
+                "Environment %r has no valid persisted data; starting it fresh",
+                self._eid,
             )
+            env_data = {}
+
+        raw = dict(env_data)
+        raw["jsons"] = env_data.get("jsons", {})
+        raw["reload"] = env_data.get("reload", {})
+        self._raw_dict = raw
 
     def __getitem__(self, key):
         self.lazy_load_data()
@@ -212,6 +218,14 @@ def window(args):
         )
     elif ptype in ["image", "text", "properties"] and is_visdom_type:
         p.update({"content": args["data"][0]["content"], "type": ptype})
+    elif ptype == "table" and is_visdom_type:
+        p.update(
+            {
+                "content": args["data"][0]["content"],
+                "type": ptype,
+                "editable": opts.get("editable", True),
+            }
+        )
     elif ptype == "network" and is_visdom_type:
         p.update(
             {

@@ -13,6 +13,8 @@ import json
 import logging
 import os
 import re
+import threading
+import uuid
 
 from visdom.data_model.base import DataStore
 from visdom.server.defaults import LAYOUT_FILE, UNDO_DIRNAME
@@ -118,19 +120,52 @@ class JSONStore(DataStore):
             payload = env_data
 
         primary = self._primary_path(eid)
+        body = json.dumps(payload, cls=NanSafeEncoder)
         try:
             if primary is None:
                 raise OSError(errno.ENAMETOOLONG, "env id maps outside env_path")
-            with open(primary, "w") as fn:
-                fn.write(json.dumps(payload, cls=NanSafeEncoder))
+            self._atomic_write(primary, body)
         except OSError as e:
             if e.errno != errno.ENAMETOOLONG and getattr(e, "winerror", None) != 206:
                 raise
             data_to_save = copy.deepcopy(payload)
             data_to_save["name"] = self._safe_eid(eid)
-            with open(self._hash_path(eid), "w") as fn:
-                fn.write(json.dumps(data_to_save, cls=NanSafeEncoder))
+            self._atomic_write(
+                self._hash_path(eid), json.dumps(data_to_save, cls=NanSafeEncoder)
+            )
         return True
+
+    @staticmethod
+    def _atomic_write(path, body):
+        """Write ``body`` to ``path`` without ever exposing a partial file.
+
+        Writes to a sibling, per-call-unique ``<path>.tmp.<pid>.<tid>.<rand>``
+        first (flushing and ``fsync``-ing so the bytes are actually on disk),
+        then ``os.replace``s it onto ``path``. ``os.replace`` is atomic on both
+        POSIX and Windows, so a concurrent ``load_env`` can only ever see the
+        fully-written old file or the fully-written new one never a
+        truncated/half-written one. Giving every write its own tmp name (rather
+        than a fixed ``<path>.tmp``) matters just as much: two saves of the
+        *same* eid racing each other would otherwise share one tmp file, and
+        one writer's ``os.replace`` could delete it out from under the other's,
+        raising ``FileNotFoundError``. The tmp file is removed if anything goes
+        wrong before the rename.
+        """
+        tmp = "{0}.tmp.{1}.{2}.{3}".format(
+            path, os.getpid(), threading.get_ident(), uuid.uuid4().hex[:8]
+        )
+        try:
+            with open(tmp, "w") as fn:
+                fn.write(body)
+                fn.flush()
+                os.fsync(fn.fileno())
+            os.replace(tmp, path)
+        except BaseException:
+            try:
+                os.remove(tmp)
+            except OSError:
+                pass
+            raise
 
     def save_all(self, state):
         """Persist every environment in ``state``; return the ids written."""
@@ -151,9 +186,20 @@ class JSONStore(DataStore):
         try:
             with open(path, "r", encoding="utf-8") as fn:
                 data = json.load(fn)
-        except (OSError, ValueError):
+        except (OSError, ValueError) as e:
+            logging.warning(
+                "Could not read env %r from %s (%r); treating as missing",
+                eid,
+                path,
+                e,
+            )
             return {}
         if not (isinstance(data, dict) and "jsons" in data and "reload" in data):
+            logging.warning(
+                "Env file %s for %r is missing 'jsons'/'reload'; treating as missing",
+                path,
+                eid,
+            )
             return {}
         env = {"jsons": data.get("jsons", {}), "reload": data.get("reload", {})}
         if "experiment" in data:
@@ -218,8 +264,7 @@ class JSONStore(DataStore):
             return
         layout_path = self._layout_path()
         ensure_dir_exists(os.path.dirname(layout_path))
-        with open(layout_path, "w") as fn:
-            fn.write(layouts)
+        self._atomic_write(layout_path, layouts)
 
     def load_layouts(self):
         """Read the saved-views layout string; return ``""`` if none is stored."""

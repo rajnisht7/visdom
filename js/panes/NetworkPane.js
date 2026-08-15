@@ -65,11 +65,26 @@ function NetworkPane(props) {
 
     const scale = dpi ? dpi / 96 : NETWORKPANE_LEGACY_SCALE;
 
+    const showExportError = (message) => {
+      setDownloadError(message);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      timeoutRef.current = setTimeout(() => {
+        setDownloadError(null);
+      }, 3000);
+    };
+
     requestAnimationFrame(() => {
+      const clone = svg.cloneNode(true);
+      inlineComputedStyles(svg, clone);
+      const baseWidth = svg.clientWidth;
+      const baseHeight = svg.clientHeight;
+      clone.setAttribute('width', baseWidth);
+      clone.setAttribute('height', baseHeight);
+      const source = new XMLSerializer().serializeToString(clone);
+
       if (format === 'svg') {
-        const clone = svg.cloneNode(true);
-        inlineComputedStyles(svg, clone);
-        const source = new XMLSerializer().serializeToString(clone);
         const blob = new Blob([source], {
           type: 'image/svg+xml;charset=utf-8',
         });
@@ -87,38 +102,54 @@ function NetworkPane(props) {
       if (format === 'pdf') {
         const PDF_CAPTURE_DPI = 300;
         const pdfScale = PDF_CAPTURE_DPI / 96;
-        svgAsPngUri(
-          svg,
-          {
-            scale: pdfScale,
-            backgroundColor: '#FFFFFF',
-            encoderType: 'image/jpeg',
-            encoderOptions: 0.92,
-          },
-          (uri) => {
+        svgStringToRasterDataUrl(
+          source,
+          Math.round(baseWidth * pdfScale),
+          Math.round(baseHeight * pdfScale),
+          '#FFFFFF',
+          'image/jpeg',
+          0.92
+        )
+          .then((uri) => {
             downloadImageAsPdf(uri, filename, PDF_CAPTURE_DPI);
-          }
-        );
+          })
+          .catch((err) => {
+            console.error('NetworkPane PDF export failed:', err);
+            showExportError('PDF export failed. Please try again.');
+          });
         return;
       }
 
       const dpiToEmbed = dpi || 96 * NETWORKPANE_LEGACY_SCALE;
-      svgAsPngUri(
-        svg,
-        {
-          scale,
-          backgroundColor: '#FFFFFF',
-          encoderType: format === 'jpg' ? 'image/jpeg' : 'image/png',
-          encoderOptions: format === 'jpg' ? 0.92 : undefined,
-        },
-        (uri) => {
-          if (format === 'jpg') {
-            downloadJpegWithDpi(uri, filename, dpiToEmbed);
-          } else {
-            downloadPngWithDpi(uri, filename, dpiToEmbed);
+      const mimeType = format === 'jpg' ? 'image/jpeg' : 'image/png';
+      svgStringToRasterDataUrl(
+        source,
+        Math.round(baseWidth * scale),
+        Math.round(baseHeight * scale),
+        '#FFFFFF',
+        mimeType,
+        format === 'jpg' ? 0.92 : undefined
+      )
+        .then((uri) => {
+          const embedded =
+            format === 'jpg'
+              ? downloadJpegWithDpi(uri, filename, dpiToEmbed)
+              : downloadPngWithDpi(uri, filename, dpiToEmbed);
+          if (!embedded) {
+            showExportError(
+              "Downloaded, but couldn't embed DPI info in the file."
+            );
           }
-        }
-      );
+        })
+        .catch((err) => {
+          console.error(
+            `NetworkPane ${format.toUpperCase()} export failed:`,
+            err
+          );
+          showExportError(
+            `${format.toUpperCase()} export failed. Please try again.`
+          );
+        });
     });
   };
 

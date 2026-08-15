@@ -18,6 +18,7 @@ import {
   downloadPngWithDpi,
 } from './utils/Embeddpimetadata';
 import { downloadImageAsPdf } from './utils/pdfExport';
+import { svgStringToRasterDataUrl } from './utils/svgRasterize';
 
 function NetworkPane(props) {
   const {

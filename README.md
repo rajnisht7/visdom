@@ -290,6 +290,8 @@ The python visdom client takes a few options:
 - `http_proxy_port`: Deprecated. Use Proxies argument for complete proxy support.
 - `username`: username to use for authentication, if server started with `-enable_login` (default: `None`)
 - `password`: password to use for authentication, if server started with `-enable_login` (default: `None`)
+- `api_key`: API key sent as the `X-API-KEY` header on every request and on the socket, for servers behind a gateway that checks keys (default: `None`)
+- `workspace`: workspace sent as the `X-Visdom-Workspace` header alongside `api_key`, required when `api_key` is given (default: `None`)
 - `proxies`: Dictionary mapping protocol to the URL of the proxy (e.g. {`http`: `foo.bar:3128`}) to be used on each Request. (default: `None`)
 - `offline`: Flag to run visdom in offline mode, where all requests are logged to file rather than to the server. Requires `log_to_filename` is set. In offline mode, all visdom commands that don't create or update plots will simply return `True`. (default: `False`)
 - `use_preflight_checks`: Ask the server whether a window exists before an `update='append'` or a `store_history=True` frame, which costs a second round trip per call. Set it to `False` to send one request and let the server create the window if it isn't there -- roughly halving the requests of an append loop. Requires a server new enough to lay out a window it creates from an append; against an older one such a window comes out unstyled. (default: `True`)
@@ -914,10 +916,11 @@ This function renders structured data as a styled, static HTML
 table (read-only — use `vis.table` if you need an editable pane).
 
 Arguments:
-- `data`: a 2D `list`/`tuple` of rows, a 2D numpy array, or a
-  `list` of `dict`s (in which case `headers` is derived from the
-  first dict's keys unless explicitly given). In case of an empty
-  list, a table with only the header row is rendered.
+- `data`: a 2D `list`/`tuple` of rows (each a `list`, `tuple` or 1-D
+  numpy array), a 2D numpy array, or a `list` of `dict`s (in which
+  case `headers` is derived from the first dict's keys unless
+  explicitly given). In case of an empty list, a table with only the
+  header row is rendered.
 - `headers`: a `list`/`tuple`/1D numpy array of column names.
   Required unless `data` is a list of dicts.
 
@@ -945,7 +948,8 @@ resized by dragging -- purely a client-side visual convenience, not
 persisted server-side.
 
 It takes as input `data`, either:
- - a 2D list of rows (list of lists/tuples), with `headers` required, or
+ - a 2D list of rows (lists, tuples or 1-D numpy arrays, e.g. `list(arr)`),
+   with `headers` required, or
  - a list of dicts, in which case `headers` is derived from the first
    dict's keys unless explicitly given (and can be used to reorder or
    select a subset of columns)
@@ -1166,9 +1170,13 @@ It accepts either:
 - raw binary labels and scores via `y_true` and `y_score`, or
 - precomputed curve points via `precision` and `recall`.
 
+A baseline showing the true class prevalence is only drawn for the
+`y_true`/`y_score` path, since prevalence cannot be recovered from
+`precision`/`recall` points alone.
+
 The following `opts` are supported:
 - `opts.title`      : plot title (`string`; default includes PR-AUC)
-- `opts.legend`     : two legend labels for curve and baseline (`list`)
+- `opts.legend`     : two legend labels for curve and baseline (`list`); only one label is needed when no baseline is drawn
 - `opts.xlabel`     : x-axis label (`string`; default = `Recall`)
 - `opts.ylabel`     : y-axis label (`string`; default = `Precision`)
 - `opts.layoutopts` : additional backend layout options (`dict`)

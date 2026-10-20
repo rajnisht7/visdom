@@ -21,6 +21,7 @@ import threading
 import websocket  # type: ignore
 import json
 import hashlib
+import ipaddress
 
 import math
 import re
@@ -35,6 +36,7 @@ import logging
 import warnings
 import time
 import errno
+from collections import OrderedDict
 from collections.abc import Mapping
 from io import BytesIO, StringIO
 from functools import wraps
@@ -79,41 +81,75 @@ def _get_perplexity(num_entities):
     return min(base, max_perplexity)
 
 
-try:
-    from openTSNE import TSNE as TSNE_OPEN
+NO_TSNE_BACKEND = (
+    "In order to use the embeddings feature, you'll "
+    "need to install a backend to support the calculation. "
+    "Currently we support openTSNE "
+    "(https://github.com/pavlin-policar/openTSNE) for "
+    "t-SNE computation, or the bhtsne implementation at "
+    "https://github.com/lvdmaaten/bhtsne/. Install openTSNE via "
+    "pip install openTSNE, or install bhtsne by cloning it into "
+    "the /py/visdom/extra_deps/ directory and running the "
+    "installation steps as listed on that github "
+    "in the created /py/visdom/extra_deps/bhtsne directory."
+)
 
-    def do_tsne(X):
-        perplexity = _get_perplexity(len(X))
-        tsne = TSNE_OPEN(n_components=2, perplexity=perplexity, verbose=True)
-        Y = tsne.fit(X)
-        return _normalize_tsne(Y)
+#: The t-SNE backend, resolved on first use and kept. ``None`` means the
+#: search has not run yet, which is not the same as having run and found
+#: nothing -- that is recorded as a function that raises.
+_tsne_backend = None
 
-except ImportError:
+
+def _resolve_tsne_backend():
+    """Pick a t-SNE backend, preferring openTSNE over the bundled bhtsne.
+
+    The search used to run at import time, which meant every ``import visdom``
+    paid for openTSNE -- and so for scikit-learn and SciPy underneath it --
+    to support ``embeddings()``, the one call that needs them. Running it here
+    keeps the same preference order and the same error, and charges it to the
+    callers that actually reach for a backend.
+    """
+    try:
+        from openTSNE import TSNE as TSNE_OPEN
+    except ImportError:
+        pass
+    else:
+
+        def with_opentsne(X):
+            perplexity = _get_perplexity(len(X))
+            tsne = TSNE_OPEN(n_components=2, perplexity=perplexity, verbose=True)
+            Y = tsne.fit(X)
+            return _normalize_tsne(Y)
+
+        return with_opentsne
+
     try:
         import visdom.extra_deps.bhtsne.bhtsne as bhtsne
+    except ImportError:
+        pass
+    else:
 
-        def do_tsne(X):
+        def with_bhtsne(X):
             perplexity = _get_perplexity(len(X))
             Y = bhtsne.run_bh_tsne(
                 X, initial_dims=X.shape[1], perplexity=perplexity, verbose=True
             )
             return _normalize_tsne(Y)
 
-    except ImportError:
+        return with_bhtsne
 
-        def do_tsne(X):
-            raise Exception(
-                "In order to use the embeddings feature, you'll "
-                "need to install a backend to support the calculation. "
-                "Currently we support openTSNE "
-                "(https://github.com/pavlin-policar/openTSNE) for "
-                "t-SNE computation, or the bhtsne implementation at "
-                "https://github.com/lvdmaaten/bhtsne/. Install openTSNE via "
-                "pip install openTSNE, or install bhtsne by cloning it into "
-                "the /py/visdom/extra_deps/ directory and running the "
-                "installation steps as listed on that github "
-                "in the created /py/visdom/extra_deps/bhtsne directory."
-            )
+    def without_a_backend(X):
+        raise Exception(NO_TSNE_BACKEND)
+
+    return without_a_backend
+
+
+def do_tsne(X):
+    """Embed ``X`` in two dimensions with whichever backend is installed."""
+    global _tsne_backend
+    if _tsne_backend is None:
+        _tsne_backend = _resolve_tsne_backend()
+    return _tsne_backend(X)
 
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -128,8 +164,54 @@ logging.getLogger("requests").setLevel(logging.CRITICAL)
 logging.getLogger("urllib3").setLevel(logging.CRITICAL)
 logger = logging.getLogger(__name__)
 
+REFUSED_STATUSES = (401, 402, 403)
+REFUSALS_REMEMBERED = 100
+
+
+def _one_line(text):
+    return "".join(ch for ch in " ".join(text.split()) if ch.isprintable())
+
+
+def _refusal_reason(body):
+    """The reason a server gave for turning a request down, as one line."""
+    text = (body or "").strip()
+    try:
+        parsed = json.loads(text)
+    except ValueError:
+        parsed = None
+    if isinstance(parsed, dict):
+        for key in ("detail", "error", "message"):
+            if isinstance(parsed.get(key), str) and _one_line(parsed[key]):
+                return _one_line(parsed[key])[:200]
+    if not text or text.startswith("<"):
+        return "no reason given"
+    return _one_line(text)[:200]
+
+
 SESSION_IDLE_TIMEOUT = 600
 SESSION_IDLE_CHECK_INTERVAL = 60
+
+KEY_HEADERS = ("X-API-KEY", "X-Visdom-Workspace")
+
+
+def _is_loopback(host):
+    """Whether ``host`` names this machine, and so never reaches a network."""
+    if not host:
+        return False
+    if host == "localhost":
+        return True
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return False
+
+
+class _KeySession(requests.Session):
+    def rebuild_auth(self, prepared_request, response):
+        if self.should_strip_auth(response.request.url, prepared_request.url):
+            for name in KEY_HEADERS:
+                prepared_request.headers.pop(name, None)
+        super().rebuild_auth(prepared_request, response)
 
 
 def get_rand_id():
@@ -175,14 +257,17 @@ def _title2str(opts):
 
 
 def _scrub_dict(d):
+    """Recursively drop the keys whose value is None; Plotly rejects nulls.
+
+    A key survives on ``v is not None`` alone. The test used to also require
+    ``_scrub_dict(v) is not None``, which can never fail -- a dict comes back a
+    dict (an emptied one included) and anything else comes back itself -- so it
+    only bought a second full recursion per key, doubling the work at every
+    level of nesting.
+    """
     if isinstance(d, dict):
-        return {
-            k: _scrub_dict(v)
-            for k, v in list(d.items())
-            if v is not None and _scrub_dict(v) is not None
-        }
-    else:
-        return d
+        return {k: _scrub_dict(v) for k, v in d.items() if v is not None}
+    return d
 
 
 TICK_FIELD_SUFFIXES = (
@@ -526,22 +611,53 @@ def _assert_sunburst_opts(opts):
         ), "branchvalues must be 'total' or 'remainder'"
 
 
+#: Extra types ``_to_numpy`` should unwrap, beyond the torch ones it finds on
+#: its own. Left here as the extension point the module-scope list used to be.
 torch_types = []
-try:
-    import torch
 
-    torch_types.append(torch.Tensor)
-    torch_types.append(torch.nn.Parameter)
-except (ImportError, AttributeError):
-    pass
+
+def _resolve_torch_types():
+    """Return the torch tensor types to unwrap, without importing torch.
+
+    ``import torch`` at module scope cost every ``import visdom`` well over a
+    second, to build an isinstance tuple. It is not needed: a caller cannot be
+    holding a tensor unless they imported torch themselves, so torch being
+    absent from ``sys.modules`` is proof there is nothing here to unwrap. When
+    it is present this is three attribute reads, not an import.
+
+    The types are read fresh every call rather than cached. A cache would have
+    to be invalidated whenever torch rebinds them -- a reload keeps the same
+    module object, and a torch caught mid-import has no ``nn`` yet but grows
+    one moments later -- and a stale entry there is silent: tensors would stop
+    being converted and reach the server as unserialisable objects. Rereading
+    costs a dict lookup per plotted argument, which is what the old
+    module-scope list cost to iterate.
+
+    Each type is resolved on its own. A partially initialised torch -- an
+    ``import visdom`` from inside torch's own import, or a stub standing in
+    for it -- can have ``Tensor`` without ``nn`` yet, and dropping the type it
+    does have would pass a real tensor through unconverted, to reach the
+    server as an object it cannot serialise.
+    """
+    torch = sys.modules.get("torch")
+    if torch is None:
+        return ()
+    nn = getattr(torch, "nn", None)
+    kinds = (getattr(torch, "Tensor", None), getattr(nn, "Parameter", None))
+    return tuple(kind for kind in kinds if isinstance(kind, type))
 
 
 def _to_numpy(a):
     if isinstance(a, list):
         return np.array(a)
-    for kind in torch_types:
-        if isinstance(a, kind):
-            return a.detach().cpu().numpy()
+    # one isinstance against the whole tuple rather than a Python loop: this
+    # runs per argument of every plot call, and with no torch imported and
+    # nothing registered in torch_types it is a single dict lookup.
+    kinds = _resolve_torch_types()
+    if torch_types:
+        kinds = tuple(torch_types) + kinds
+    if kinds and isinstance(a, kinds):
+        return a.detach().cpu().numpy()
     return a
 
 
@@ -660,17 +776,24 @@ def _validate_curve_range(values, name):
         raise ValueError("{} should be within [0, 1]".format(name))
 
 
-def _curve_legend(legend, default_legend):
-    """Return user-provided legend or default 2-element list."""
-    if not isinstance(legend, (tuple, list)) or len(legend) < 2:
+def _curve_legend(legend, default_legend, required=None):
+    """Return exactly ``required`` legend labels (defaults to the length of
+    ``default_legend``), falling back to the defaults if too few are given."""
+    if required is None:
+        required = len(default_legend)
+    if not isinstance(legend, (tuple, list)) or len(legend) < required:
         if legend is not None:
             warnings.warn(
-                "legend should be a list/tuple with at least 2 elements, "
-                "falling back to default: {}".format(default_legend),
+                "legend should be a list/tuple with at least {} element{}, "
+                "falling back to default: {}".format(
+                    required,
+                    "" if required == 1 else "s",
+                    default_legend[:required],
+                ),
                 UserWarning,
             )
-        return list(default_legend)
-    return list(legend)
+        return list(default_legend[:required])
+    return list(legend[:required])
 
 
 def _trapz_area(y, x):
@@ -727,6 +850,11 @@ def _normalize_title_strings(layout):
     raw figure layout untouched, so a plain string can appear at any depth
     (e.g. layout['scene']['xaxis']['title']). This walks the whole layout
     and fixes every occurrence in place, returning a new structure.
+
+    It belongs to the layout: it descends into lists -- a title can hide in a
+    list of dicts such as layout['annotations'] -- so handing it a trace makes
+    one call per plotted coordinate, and a list of numbers can hold no title to
+    find. Normalize whatever a caller merges into a trace, not the trace.
     """
     if isinstance(layout, dict):
         fixed = {}
@@ -777,6 +905,8 @@ class Visdom(object):
         log_to_filename=None,
         username=None,
         password=None,
+        api_key=None,
+        workspace=None,
         proxies=None,
         offline=False,
         use_polling=False,
@@ -854,6 +984,21 @@ class Visdom(object):
             assert password, "no password given for authentication"
             self.password = hashlib.sha256(password.encode("utf-8")).hexdigest()
 
+        self.api_key = api_key
+        self.workspace = workspace
+        if self.api_key:
+            assert self.workspace, "workspace is required when api_key is given"
+            parsed_server = urlparse(self.server)
+            if parsed_server.scheme != "https" and not _is_loopback(
+                parsed_server.hostname
+            ):
+                logger.warning(
+                    "Sending an API key to %s over an unencrypted connection: "
+                    "it can be read in transit. Use an https:// server url to "
+                    "protect it.",
+                    parsed_server.hostname,
+                )
+
         self.win_data = {}
         if self.offline:
             self.use_socket = False
@@ -920,13 +1065,17 @@ class Visdom(object):
                     pass
             self._pid = current_pid
             logger.warning("Setting up a new session...")
-            sess = requests.Session()
+            sess = _KeySession()
             if self.proxies:
                 sess.proxies.update(self.proxies)
             if isinstance(self.ssl_verify, str):
                 sess.verify = self.ssl_verify
             elif not self.ssl_verify:
                 sess.verify = False
+            if self.api_key:
+                sess.headers.update(
+                    {"X-API-KEY": self.api_key, "X-Visdom-Workspace": self.workspace}
+                )
             if self.username:
                 resp = sess.post(
                     "%s:%s%s" % (self.server, self.port, self.base_url),
@@ -1092,37 +1241,79 @@ class Visdom(object):
                 sock_addr = "{}://{}:{}{}/vis_socket".format(
                     ws_scheme, self.server_base_name, self.port, self.base_url
                 )
-                ws = websocket.WebSocketApp(
-                    sock_addr,
-                    on_message=on_message,
-                    on_error=on_error,
-                    on_close=on_close,
-                    header={
-                        "Cookie": "user_password="
-                        + self.session.cookies.get("user_password", "")
-                    },
-                )
-                run_forever_kwargs = {
+                ws_header = {
+                    "Cookie": "user_password="
+                    + self.session.cookies.get("user_password", "")
+                }
+                connect_kwargs = {
                     "http_proxy_host": self.http_proxy_host,
                     "http_proxy_port": self.http_proxy_port,
-                    "ping_timeout": 100.0,
                 }
                 if ws_scheme == "wss":
                     if isinstance(self.ssl_verify, str):
-                        run_forever_kwargs["sslopt"] = {
+                        connect_kwargs["sslopt"] = {
                             "cert_reqs": ssl.CERT_REQUIRED,
                             "ca_certs": self.ssl_verify,
                         }
                     elif not self.ssl_verify:
-                        run_forever_kwargs["sslopt"] = {
+                        connect_kwargs["sslopt"] = {
                             "cert_reqs": ssl.CERT_NONE,
                         }
-                ws.run_forever(**run_forever_kwargs)
-                ws.close()
+                if self.api_key:
+                    ws_header["X-API-KEY"] = self.api_key
+                    ws_header["X-Visdom-Workspace"] = self.workspace
+                    self._run_keyed_websocket(
+                        sock_addr,
+                        ws_header,
+                        connect_kwargs,
+                        on_message,
+                        on_error,
+                        on_close,
+                    )
+                else:
+                    ws = websocket.WebSocketApp(
+                        sock_addr,
+                        on_message=on_message,
+                        on_error=on_error,
+                        on_close=on_close,
+                        header=ws_header,
+                    )
+                    ws.run_forever(ping_timeout=100.0, **connect_kwargs)
+                    ws.close()
             except Exception as e:
                 logger.error("Socket had error {}, attempting restart".format(e))
             if self.use_socket:
                 time.sleep(3)
+
+    def _run_keyed_websocket(
+        self, sock_addr, header, connect_kwargs, on_message, on_error, on_close
+    ):
+        ws = None
+        try:
+            ws = websocket.create_connection(
+                sock_addr, header=header, redirect_limit=0, **connect_kwargs
+            )
+            if ws.getstatus() != 101:
+                location = (ws.getheaders() or {}).get("location")
+                raise websocket.WebSocketException(
+                    "Refused to follow the socket to {}, which would hand it "
+                    "the API key".format(location)
+                )
+            while self.use_socket:
+                message = ws.recv()
+                if not message:
+                    break
+                on_message(ws, message)
+        except websocket.WebSocketConnectionClosedException:
+            pass
+        except Exception as error:
+            if ws is None:
+                ws = websocket.WebSocket()
+            on_error(ws, error)
+        finally:
+            if ws is not None:
+                ws.close()
+            on_close(ws)
 
     def setup_polling(self):
         self.setup_socket(polling=True)
@@ -1152,6 +1343,35 @@ class Visdom(object):
                         + "\n"
                     )
 
+    def _note_refusal(self, status, body):
+        """Say so when the server turns a request down.
+
+        A hosted server answers 401, 402 or 403 for a key that is wrong,
+        revoked or read-only, for a workspace this key may not reach, and for a
+        plan that is out of storage. The body still goes back to the caller,
+        as it does for any status, but on its own it reads as a window id, so a
+        script whose every plot was refused ran to the end looking as if it had
+        worked.
+
+        A warning and never an exception, whatever ``raise_exceptions`` says:
+        a refused write has to look the way it does for ``requests``, which
+        does not raise on a 4xx. Each distinct reason is logged once, so a
+        training loop is not flooded.
+        """
+        if status not in REFUSED_STATUSES:
+            return
+        message = "The visdom server refused this request ({0}): {1}".format(
+            status, _refusal_reason(body)
+        )
+        seen = self.__dict__.setdefault("_refusals_seen", OrderedDict())
+        if message in seen:
+            seen.move_to_end(message)
+            return
+        seen[message] = True
+        if len(seen) > REFUSALS_REMEMBERED:
+            seen.popitem(last=False)
+        logger.warning(message)
+
     def _handle_post(self, url, data=None):
         """
         This function has the responsibility of sending the request to the
@@ -1164,6 +1384,7 @@ class Visdom(object):
         had_session = self._session is not None
         try:
             r = self.session.post(url, data=data, timeout=(20, None))
+            self._note_refusal(r.status_code, r.text)
             return r.text
         except requests.exceptions.SSLError:
             raise
@@ -1179,6 +1400,7 @@ class Visdom(object):
                     pass
                 self._session = None
             r = self.session.post(url, data=data, timeout=(20, None))
+            self._note_refusal(r.status_code, r.text)
             return r.text
 
     def _send(
@@ -1873,7 +2095,7 @@ class Visdom(object):
         _assert_opts(opts)
 
         if svgfile is not None:
-            svgstr = str(loadfile(svgfile))
+            svgstr = loadfile(svgfile).decode("utf-8")
 
         assert svgstr is not None, "should specify SVG string or filename"
         svg = re.search("<svg .+</svg>", svgstr, re.DOTALL)
@@ -2204,7 +2426,7 @@ class Visdom(object):
         - `opts.caption`: caption below the image (`string`; optional)
         - `opts.store_history`: append to image history pane (`boolean`)
         """
-        opts = {} if opts is None else opts
+        opts = {} if opts is None else dict(opts)
         _title2str(opts)
         _assert_opts(opts)
         if np.issubdtype(img.dtype, np.floating):
@@ -2601,7 +2823,7 @@ class Visdom(object):
         # backward-compatibility with OpenCV.
         if np.issubdtype(tensor.dtype, np.floating):
             tensor = 255 * tensor
-        tensor = tensor.astype(np.uint8).clip(0, 255)
+        tensor = tensor.clip(0, 255).astype(np.uint8)
 
         # Use BGR for backward-compatibility with OpenCV
         pixelformats = {1: "gray", 3: "bgr24"}
@@ -2914,7 +3136,7 @@ class Visdom(object):
 
         is3d = X.shape[1] == 3
 
-        opts = {} if opts is None else opts
+        opts = {} if opts is None else dict(opts)
         if opts.get("textlabels") is None:
             opts["mode"] = opts.get("mode", "markers")
         else:
@@ -3011,9 +3233,14 @@ class Visdom(object):
                     _data["z"] = X.take(2, 1)[ind].tolist()
 
                 if trace_name in trace_opts:
-                    _data.update(trace_opts[trace_name])
+                    # Normalized here rather than over the finished trace below:
+                    # these options are the only part of ``_data`` that can carry
+                    # a title, and the helper walks into lists, so pointing it at
+                    # the trace cost one call per plotted point to rewrite
+                    # nothing.
+                    _data.update(_normalize_title_strings(trace_opts[trace_name]))
 
-                data.append(_scrub_dict(_normalize_title_strings(_data)))
+                data.append(_scrub_dict(_data))
 
         if opts:
             for marker_prop in ["markercolor"]:
@@ -3168,7 +3395,7 @@ class Visdom(object):
         if Z is not None:
             assert Z.shape == Y.shape, "Z and Y should be the same shape"
 
-        opts = {} if opts is None else opts
+        opts = {} if opts is None else dict(opts)
         opts["markers"] = opts.get("markers", False)
         opts["fillarea"] = opts.get("fillarea", False)
         if Z is not None and opts["fillarea"]:
@@ -3308,12 +3535,16 @@ class Visdom(object):
         Draw a precision-recall curve for binary classification.
 
         You can either provide raw labels/scores (`y_true`, `y_score`) or
-        precomputed points (`precision`, `recall`).
+        precomputed points (`precision`, `recall`). A baseline showing the
+        true class prevalence is only drawn for the `y_true`/`y_score`
+        path, since prevalence cannot be recovered from `precision`/
+        `recall` points alone.
 
         The following `opts` are supported:
 
         - `opts.title`      : plot title (`string`; default includes PR-AUC)
-        - `opts.legend`     : two legend labels for curve and baseline (`list`)
+        - `opts.legend`     : two legend labels for curve and baseline
+          (`list`); only one label is needed when no baseline is drawn
         - `opts.xlabel`     : x-axis label (`string`; default = `Recall`)
         - `opts.ylabel`     : y-axis label (`string`; default = `Precision`)
         - `opts.layoutopts` : additional backend layout options (`dict`)
@@ -3350,19 +3581,25 @@ class Visdom(object):
 
         auc = _average_precision(precision, recall)
 
-        opts = dict(opts)
-        opts["xlabel"] = opts.get("xlabel", "Recall")
-        opts["ylabel"] = opts.get("ylabel", "Precision")
-        opts["legend"] = _curve_legend(opts.get("legend"), ["PR", "Baseline"])
-        opts["title"] = opts.get("title", "PR Curve (AUC={:.4f})".format(auc))
-
         if has_raw:
             y_true_arr = np.ravel(np.asarray(y_true))
             positive_rate = float(np.mean(y_true_arr == pos_label))
         else:
-            positive_rate = float(precision[0]) if float(recall[0]) == 0.0 else None
+            # Precision/recall alone don't preserve class counts, so
+            # prevalence can't be recovered from them.
+            positive_rate = None
 
         baseline = [positive_rate, positive_rate] if positive_rate is not None else None
+
+        opts = dict(opts)
+        opts["xlabel"] = opts.get("xlabel", "Recall")
+        opts["ylabel"] = opts.get("ylabel", "Precision")
+        opts["legend"] = _curve_legend(
+            opts.get("legend"),
+            ["PR", "Baseline"],
+            required=2 if baseline is not None else 1,
+        )
+        opts["title"] = opts.get("title", "PR Curve (AUC={:.4f})".format(auc))
 
         data = [
             {
@@ -3702,7 +3939,13 @@ class Visdom(object):
         - `opts.stacked` : stack multiple columns in `X`
             - `opts.legend`  : `list` containing legend labels
         """
-        X = np.squeeze(X)
+        X = np.asarray(X)
+        if X.ndim != 2 or opts is None or opts.get("legend") is None:
+            X = np.atleast_1d(np.squeeze(X))
+        elif X.shape[1] == 1 and X.shape[0] > 1 and len(opts["legend"]) == X.shape[0]:
+            # A label per row retains the legacy column-vector series layout.
+            X = X[:, 0]
+
         assert X.ndim == 1 or X.ndim == 2, "X should be one or two-dimensional"
         if X.ndim == 1:
             if opts is not None and opts.get("legend") is not None:
@@ -3714,7 +3957,7 @@ class Visdom(object):
             else:
                 X = X[:, None]
         if Y is not None:
-            Y = np.squeeze(Y)
+            Y = np.atleast_1d(np.squeeze(np.asarray(Y)))
             assert Y.ndim == 1, "Y should be one-dimensional"
             assert len(X) == len(Y), "sizes of X and Y should match"
         else:
@@ -3768,12 +4011,11 @@ class Visdom(object):
 
         - `opts.numbins`: number of bins (`number`; default = 30)
         """
-
-        X = np.squeeze(X)
+        X = np.atleast_1d(np.squeeze(np.asarray(X)))
         assert X.ndim == 1, "X should be one-dimensional"
 
-        opts = {} if opts is None else opts
-        opts["numbins"] = opts.get("numbins", min(30, len(X)))
+        opts = {} if opts is None else dict(opts)
+        opts["numbins"] = opts.get("numbins", max(1, min(30, len(X))))
         _title2str(opts)
         _assert_opts(opts)
 
@@ -3807,8 +4049,8 @@ class Visdom(object):
                            `'probability density'`
         """
 
-        X = np.squeeze(np.asarray(X))
-        Y = np.squeeze(np.asarray(Y))
+        X = np.atleast_1d(np.squeeze(np.asarray(X)))
+        Y = np.atleast_1d(np.squeeze(np.asarray(Y)))
         assert X.ndim == 1 and Y.ndim == 1, "X and Y should be one-dimensional"
         assert len(X) == len(Y), "X and Y should have the same length"
 
@@ -3852,7 +4094,7 @@ class Visdom(object):
         - `opts.legend`: labels for each of the columns in `X`
         """
 
-        X = np.squeeze(X)
+        X = np.atleast_1d(np.squeeze(X))
         assert X.ndim == 1 or X.ndim == 2, "X should be one or two-dimensional"
         if X.ndim == 1:
             X = X[:, None]
@@ -3903,8 +4145,14 @@ class Visdom(object):
         - `opts.xmin`    : clip minimum value (`number`; default = `X:min()`)
         - `opts.xmax`    : clip maximum value (`number`; default = `X:max()`)
         """
-        X = np.squeeze(X)
-        assert X.ndim == 2, "X should be two-dimensional"
+
+        X = np.asarray(X)
+        if X.ndim > 2:
+            X = np.squeeze(X)
+        assert X.ndim == 2, (
+            "X should be two-dimensional; got ndim=%d after squeeze. "
+            "Only singleton dimensions are removed — pass a 2D matrix." % X.ndim
+        )
 
         opts = {} if opts is None else opts
         opts["xmin"] = float(opts.get("xmin", np.nanmin(X)))
@@ -4091,13 +4339,14 @@ class Visdom(object):
         - `opts.legend`  : `list` containing legend names
         """
 
-        X = np.squeeze(X)
+        X = np.atleast_1d(np.squeeze(np.asarray(X)))
         assert X.ndim == 1 or X.ndim == 2, "X should be one or two-dimensional"
         if X.ndim == 1:
             X = X[:, None]
 
         if Y is None:
             Y = np.arange(1, X.shape[0] + 1)
+        Y = np.atleast_1d(np.squeeze(np.asarray(Y)))
         if Y.ndim == 1:
             Y = Y[:, None]
         assert Y.shape[0] == X.shape[0], "number of rows in X and Y must match"
@@ -4214,7 +4463,7 @@ class Visdom(object):
                 values = np.asarray(values, dtype=np.float64)
             except (TypeError, ValueError):
                 raise AssertionError("values must be numeric")
-            values = np.squeeze(values)
+            values = np.atleast_1d(np.squeeze(values))
             assert values.ndim == 1, "values should be one-dimensional"
             assert len(values) == len(
                 labels
@@ -4245,7 +4494,7 @@ class Visdom(object):
         - `opts.legend`: `list` containing legend names
         """
 
-        X = np.squeeze(X)
+        X = np.atleast_1d(np.squeeze(X))
         assert X.ndim == 1, "X should be one-dimensional"
         assert np.all(np.greater_equal(X, 0)), "X cannot contain negative values"
 
@@ -4630,9 +4879,9 @@ class Visdom(object):
         `X` represents one experiment and each column represents a dimension
         (e.g., a hyperparameter or metric).
 
-        An optional `N`-length vector `Y` supplies per-experiment color values
-        (e.g., accuracy or loss) so that the lines are shaded according to
-        a continuous colorscale.
+        An optional `N`-length vector or scalar (for `N=1`) `Y` supplies
+        per-experiment color values (e.g., accuracy or loss) so that the lines
+        are shaded according to a continuous colorscale.
 
         The following `opts` are supported:
 
@@ -4661,7 +4910,7 @@ class Visdom(object):
         assert M >= 2, "X must have at least 2 dimensions (columns)"
 
         if Y is not None:
-            Y = np.squeeze(np.asarray(Y, dtype=float))
+            Y = np.atleast_1d(np.squeeze(np.asarray(Y, dtype=float)))
             assert Y.ndim == 1, "Y must be a 1D vector"
             assert (
                 len(Y) == N
@@ -4890,7 +5139,8 @@ class Visdom(object):
         """
         This function renders structured data as a styled HTML table.
 
-        - `data`: a 2D `list`/`tuple` of row data, a 2D numpy array, or
+        - `data`: a 2D `list`/`tuple` of row data (each row a `list`,
+           `tuple` or 1-D numpy array), a 2D numpy array, or
            a list of `dict`s (in which case `headers` is derived from
            the first dict's keys unless explicitly given). In case of
            an empty list, a table with only headers will be rendered.
@@ -4957,7 +5207,8 @@ class Visdom(object):
         """
         Renders a native, structured, editable table pane.
 
-        - `data`: a 2D list of rows (list of lists/tuples), OR a list of
+        - `data`: a 2D list of rows (list of lists, tuples or 1-D numpy
+           arrays), a 2D numpy array, OR a list of
            dicts (in which case `headers` is derived from the first
            dict's keys unless explicitly given).
         - `headers`: list of column names. Required if `data` rows are
